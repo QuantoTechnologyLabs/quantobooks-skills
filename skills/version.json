@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "skills": [
+    "quanto-client-context",
+    "month-end-close",
+    "flag-triage",
+    "balance-sheet-review",
+    "transaction-cleanup",
+    "client-onboarding-review",
+    "ar-followup",
+    "ap-pay-run",
+    "vendor-cleanup",
+    "management-report",
+    "year-end-1099-prep",
+    "catch-up-bookkeeping",
+    "journal-entry-assist",
+    "document-lookup"
+  ],
+  "minMcpServerVersion": "0.1.0",
+  "releaseNotes": "0.2.0 — Karbon practice-management context. The foundation guard (quanto-client-context) now documents the karbon_* tool tier (client profile, work items, notes, note comments) as an optional, read-only context source for mapped clients. client-onboarding-review, document-lookup, flag-triage, management-report, and month-end-close gained conditional Karbon steps so they fold in client profile / engagement / relationship context when present. All additive and best-effort — skills skip Karbon silently when a client isn't mapped. 0.1.0 — Initial skill bundle: foundation client-context guard + 13 workflow skills (tier 1: month-end-close, flag-triage, balance-sheet-review, transaction-cleanup, client-onboarding-review; tier 2: ar-followup, ap-pay-run, vendor-cleanup, management-report; tier 3: year-end-1099-prep, catch-up-bookkeeping, journal-entry-assist, document-lookup). Bank rec, payroll, and sales tax intentionally excluded — see README."
+}
