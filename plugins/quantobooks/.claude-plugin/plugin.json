@@ -1,0 +1,20 @@
+{
+  "name": "quantobooks",
+  "version": "0.4.0",
+  "description": "QuantoBooks accounting skills for Claude — month-end close, flag triage, balance sheet review, AR/AP, 1099 prep, and more.",
+  "author": {
+    "name": "Quanto Technology Labs",
+    "email": "support@tryquanto.com",
+    "url": "https://quantobooks.com"
+  },
+  "homepage": "https://github.com/quantotechnologylabs/quantobooks-skills",
+  "repository": "https://github.com/quantotechnologylabs/quantobooks-skills",
+  "license": "MIT",
+  "keywords": [
+    "accounting",
+    "quickbooks",
+    "quantobooks",
+    "bookkeeping",
+    "mcp"
+  ]
+}

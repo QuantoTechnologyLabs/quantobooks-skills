@@ -1,137 +1,133 @@
 # Installing QuantoBooks Skills
 
-End users have four install paths. Pick whichever matches the user's setup.
+Pick the path that matches your client. **Claude Code / Cowork** has a true
+one-command bundle install (the plugin marketplace). **Claude Desktop** does
+not — see the note at the bottom.
 
-## Path 1 — One-line shell installer (recommended; no Node required)
+## Path 1 — Plugin marketplace (recommended for Claude Code / Cowork)
 
-```bash
-curl -fsSL https://get.quantobooks.com/skills | bash
+In Claude Code (or Cowork), run:
+
+```
+/plugin marketplace add quantotechnologylabs/quantobooks-skills
+/plugin install quantobooks@quantobooks
 ```
 
-What it does:
-1. Detects which Claude clients are installed (Claude Code, Claude Desktop).
-2. Downloads the latest skills bundle from GitHub.
-3. Copies every skill into the right skills directory for each detected client.
-4. Drops a version marker so future updates can detect what's installed.
+That's it — all skills install as one plugin, namespaced as
+`quantobooks:quanto-month-end-close`, `quantobooks:quanto-flag-triage`, etc.,
+and update with `/plugin update quantobooks@quantobooks`.
 
-No Node, no npm, no sudo. macOS + Linux only — Windows users should use Path 2.
+This is the cleanest path: one unit, auto-updating, no loose files. Restart
+Claude Code after installing so it picks up the new skills.
+
+## Path 2 — One-line shell installer (Claude Code, no Node required)
+
+Copies skills into `~/.claude/skills/` (and the project `.claude/skills/` if
+you run it from a repo). Good if you don't want the plugin system.
+
+```bash
+curl -fsSL https://www.quantobooks.com/api/skills/install.sh | bash
+```
+
+No Node, no npm, no sudo. macOS + Linux only — Windows users use Path 3.
 
 Optional flags (pass after `--`):
 
 ```bash
-curl -fsSL https://get.quantobooks.com/skills | bash -s -- --dry-run
-curl -fsSL https://get.quantobooks.com/skills | bash -s -- --target claude-desktop
+curl -fsSL https://www.quantobooks.com/api/skills/install.sh | bash -s -- --dry-run
+curl -fsSL https://www.quantobooks.com/api/skills/install.sh | bash -s -- --target claude-code-project
 ```
 
 Pin a specific version:
 
 ```bash
-curl -fsSL https://get.quantobooks.com/skills | INSTALL_VERSION=0.1.0 bash
+curl -fsSL https://www.quantobooks.com/api/skills/install.sh | INSTALL_VERSION=0.4.0 bash
 ```
 
-Want to inspect before running (recommended for any pipe-to-bash):
+Inspect before running (recommended for any pipe-to-bash):
 
 ```bash
-curl -fsSL https://get.quantobooks.com/skills | less
+curl -fsSL https://www.quantobooks.com/api/skills/install.sh | less
 ```
 
-The script itself lives at [`install.sh`](./install.sh) in this directory and at the root of the public mirror repo.
+The script lives at [`install.sh`](./install.sh) here and at the root of the
+public mirror repo.
 
-## Path 2 — Node CLI (Windows, or anywhere npx works)
+## Path 3 — Node CLI (Windows, or anywhere npx works; Claude Code)
 
 ```bash
 npx @quantobooks/skills install
 ```
 
-What it does (same outcome as Path 1):
-1. Detects which Claude clients are installed.
-2. Copies every skill from the package into the right skills directory.
-3. Prints a summary.
-
-Re-run any time to update.
-
-Optional flags:
-- `--target claude-code-user` / `--target claude-desktop` — restrict client
-- `--skills quanto-month-end-close,flag-triage` — install a subset
+Same outcome as Path 2 (copies into `~/.claude/skills/`). Flags:
+- `--target claude-code-user` / `--target claude-code-project` — restrict location
+- `--skills quanto-month-end-close,quanto-flag-triage` — install a subset
 - `--dry-run` — preview without writing
-- `--upgrade` — explicit re-install (default behavior; flag kept for clarity)
 
-## Path 3 — Web app one-click install (for users who don't want a CLI)
-
-In the QuantoBooks dashboard, **Settings → AI Assistant → Skills** offers:
-
-- A "Copy install command" button that puts `npx @quantobooks/skills install` on the clipboard
-- A "Download bundle" button for users on locked-down machines — gives a zip with the skill folders and a per-OS README explaining where to drop them
-
-Same files as Path 1, just delivered without a terminal.
-
-## Path 4 — Manual install (for power users + air-gapped environments)
+## Path 4 — Manual (power users / air-gapped; Claude Code)
 
 ```bash
 git clone https://github.com/quantotechnologylabs/quantobooks-skills.git
 cd quantobooks-skills
 
-# Claude Code (user-level, applies across all projects)
-cp -r skills/* ~/.claude/skills/
+# Claude Code (user-level, all projects)
+cp -r skills/quanto-* ~/.claude/skills/
 
-# Claude Code (project-level, applies in this repo only)
-cp -r skills/* ./.claude/skills/
-
-# Claude Desktop (macOS)
-cp -r skills/* "~/Library/Application Support/Claude/skills/"
+# Claude Code (project-level, this repo only)
+cp -r skills/quanto-* ./.claude/skills/
 ```
 
-Or symlink instead of copy if you want to follow the git repo:
+## Claude Desktop
 
-```bash
-ln -s "$(pwd)/skills" ~/.claude/skills/quantobooks
-```
+**Claude Desktop can't install this bundle from the filesystem, and doesn't
+support custom plugin marketplaces yet.** Dropping files into
+`~/Library/Application Support/Claude/skills/` does nothing — the app ignores
+it. Your options today:
 
-## Source of truth
+1. **Download the zip** from the QuantoBooks dashboard (Settings → AI
+   Assistant → Skills → Download bundle) and add each skill via Claude
+   Desktop's in-app Skills uploader (Settings → Capabilities → Skills). This
+   is one-at-a-time — a Claude product constraint, not ours.
+2. **Use Claude Code / Cowork instead** (Path 1), where the whole bundle
+   installs in one command.
 
-This directory (`apps/mcp-server/skills/` in `glaceon-monorepo`) is the canonical source. A GitHub Action mirrors every change to the public [`quantotechnologylabs/quantobooks-skills`](https://github.com/quantotechnologylabs/quantobooks-skills) repo on push to `production`. The npm package `@quantobooks/skills` publishes from the same mirror.
+We'll switch Desktop to a one-command install the moment Anthropic exposes
+custom marketplaces there.
 
 ## Verifying installation
 
-After install, in Claude Code or Claude Desktop, run:
-
-```
-/skills list
-```
-
-You should see the QuantoBooks skills listed. To test, try:
+In Claude Code, after a restart, try:
 
 > "Run a month-end close for my active client"
 
-Claude should load the `quanto-month-end-close` skill and start by calling `get_active_client_info`.
+Claude should load `quanto-month-end-close` and start by confirming the active
+client (`get_active_client_info`). If it doesn't, the skills aren't loaded —
+re-run the installer / re-add the plugin and restart.
 
 ## Updating
 
-```bash
-npx @quantobooks/skills install --upgrade
-```
-
-This re-downloads the latest version and overwrites. The CLI prints a diff of changes since the last install so users see what's new.
+- **Plugin marketplace:** `/plugin update quantobooks@quantobooks`
+- **Shell / npx:** re-run the installer (it overwrites in place).
 
 ## Uninstall
 
-```bash
-npx @quantobooks/skills uninstall
-```
+- **Plugin marketplace:** `/plugin uninstall quantobooks@quantobooks`
+- **Shell / npx:** `npx @quantobooks/skills uninstall` (removes only what the
+  CLI placed; leaves skills you added manually).
 
-Removes every skill the installer placed. Leaves anything the user added manually.
+## Source of truth
 
-## What lives where
+`apps/mcp-server/skills/` in `glaceon-monorepo` is canonical. A GitHub Action
+mirrors every change to the public
+[`quantotechnologylabs/quantobooks-skills`](https://github.com/quantotechnologylabs/quantobooks-skills)
+repo (skills + `install.sh` + the plugin-marketplace manifests) on push to
+`production`. The npm package `@quantobooks/skills` publishes from the same
+source.
 
-| Client | Skills directory |
-|--------|------------------|
+## What lives where (Claude Code)
+
+| Location | Skills directory |
+|----------|------------------|
+| Plugin install | `~/.claude/plugins/` (managed by `/plugin`) |
 | Claude Code (user) | `~/.claude/skills/` |
 | Claude Code (project) | `<repo>/.claude/skills/` |
-| Claude Desktop (macOS) | `~/Library/Application Support/Claude/skills/` |
-| Claude Desktop (Windows) | `%APPDATA%/Claude/skills/` |
-| Claude Desktop (Linux) | `~/.config/Claude/skills/` |
-| Claude.ai web | Uploaded as Project Knowledge (the CLI generates a zip for this) |
-
-## Telemetry (none by default)
-
-The installer doesn't phone home. We add nothing to the user's machine other than the skill files themselves. If we ever ship optional usage telemetry, it'll be opt-in with a `--enable-telemetry` flag.

@@ -9,11 +9,21 @@
 #   curl -fsSL https://get.quantobooks.com/skills | bash -s -- --dry-run
 #   curl -fsSL https://get.quantobooks.com/skills | bash -s -- --target claude-desktop
 #
-# This script:
-#   1. Detects which Claude clients are installed on this machine
-#   2. Downloads the latest QuantoBooks skills bundle from GitHub
-#   3. Copies skills into each detected client's skills directory
-#   4. Drops a quantobooks-version.json marker so updates can be detected later
+# This script installs the bundle for **Claude Code** (the CLI) by copying
+# skills into ~/.claude/skills/ (user) and ./.claude/skills/ (project):
+#   1. Downloads the latest QuantoBooks skills bundle from GitHub
+#   2. Copies skills into Claude Code's skills directories
+#   3. Drops a quantobooks-version.json marker so updates can be detected later
+#
+# Claude Code / Cowork users can ALSO install the whole bundle as a plugin:
+#   /plugin marketplace add quantotechnologylabs/quantobooks-skills
+#   /plugin install quantobooks@quantobooks
+#
+# Claude DESKTOP does not load skills from a filesystem folder and does not
+# support custom plugin marketplaces yet, so this script cannot install there.
+# For Desktop, download the zip from the QuantoBooks dashboard and add skills
+# via the in-app Skills uploader. (This script will tell you if it detects
+# Desktop.)
 #
 # No Node, no npm, no sudo. macOS and Linux only — Windows users should run
 # `npx @quantobooks/skills install` from PowerShell instead.
@@ -33,19 +43,23 @@ DRY_RUN=0
 ONLY_TARGET=""
 
 # -------- Pretty output (TTY only) --------
+# Use ANSI-C ($'...') quoting so the variables hold real ESC bytes, not the
+# literal 4-char string "\033[2m". That lets us print them with %s everywhere
+# (a previous version embedded these in a %s argument, which printed the raw
+# escape codes on screen).
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
-  C_DIM="\033[2m"; C_BOLD="\033[1m"
-  C_GREEN="\033[32m"; C_YELLOW="\033[33m"; C_RED="\033[31m"; C_CYAN="\033[36m"
-  C_OFF="\033[0m"
+  C_DIM=$'\033[2m'; C_BOLD=$'\033[1m'
+  C_GREEN=$'\033[32m'; C_YELLOW=$'\033[33m'; C_RED=$'\033[31m'; C_CYAN=$'\033[36m'
+  C_OFF=$'\033[0m'
 else
   C_DIM=""; C_BOLD=""; C_GREEN=""; C_YELLOW=""; C_RED=""; C_CYAN=""; C_OFF=""
 fi
 
-say()  { printf "%b\n" "$*"; }
-step() { printf "%b→%b %s\n" "$C_CYAN" "$C_OFF" "$*"; }
-ok()   { printf "%b✓%b %s\n" "$C_GREEN" "$C_OFF" "$*"; }
-warn() { printf "%b!%b %s\n" "$C_YELLOW" "$C_OFF" "$*" >&2; }
-err()  { printf "%b✗%b %s\n" "$C_RED" "$C_OFF" "$*" >&2; }
+say()  { printf "%s\n" "$*"; }
+step() { printf "%s→%s %s\n" "$C_CYAN" "$C_OFF" "$*"; }
+ok()   { printf "%s✓%s %s\n" "$C_GREEN" "$C_OFF" "$*"; }
+warn() { printf "%s!%s %s\n" "$C_YELLOW" "$C_OFF" "$*" >&2; }
+err()  { printf "%s✗%s %s\n" "$C_RED" "$C_OFF" "$*" >&2; }
 
 # -------- Args --------
 while [ $# -gt 0 ]; do
@@ -55,13 +69,18 @@ while [ $# -gt 0 ]; do
     --target=*) ONLY_TARGET="${1#--target=}"; shift ;;
     -h|--help)
       cat <<EOF
-QuantoBooks Skills installer
+QuantoBooks Skills installer (Claude Code)
 
 Options:
-  --target <id>   Install only to a specific client. One of:
-                  claude-code-user, claude-code-project, claude-desktop
+  --target <id>   Install only to a specific location. One of:
+                  claude-code-user, claude-code-project
   --dry-run       Show what would happen; write nothing
   -h, --help      Show this help
+
+Note: Claude Desktop is not a supported target — it doesn't load skills from
+a folder. For Desktop, use the in-app Skills uploader or the plugin install:
+  /plugin marketplace add quantotechnologylabs/quantobooks-skills
+  /plugin install quantobooks@quantobooks
 
 Env vars:
   INSTALL_VERSION   Pin to a specific bundle version (e.g. 0.1.0). Default: latest
@@ -122,19 +141,39 @@ fi
 say "${C_BOLD}QuantoBooks Skills${C_OFF}  ${C_DIM}($VERSION)${C_OFF}"
 say ""
 
-# -------- Detect targets --------
+# Claude Desktop is detected only to warn the user — it can't be a file target.
+if [ -d "$CLAUDE_DESKTOP_ROOT" ]; then DESKTOP_DETECTED=1; else DESKTOP_DETECTED=0; fi
+
+# A user passing --target claude-desktop has the wrong mental model; explain
+# and exit cleanly rather than writing files Desktop will ignore.
+if [ "$ONLY_TARGET" = "claude-desktop" ]; then
+  warn "Claude Desktop can't be installed to from the filesystem."
+  say ""
+  say "Claude Desktop doesn't load skills from a folder, and doesn't support"
+  say "custom plugin marketplaces yet. To use these skills in Claude Desktop:"
+  say "  • Download the bundle zip from the QuantoBooks dashboard and add each"
+  say "    skill via Settings → Capabilities → Skills, or"
+  say "  • Use Claude Code / Cowork instead (this installer, or the plugin:"
+  say "    /plugin marketplace add quantotechnologylabs/quantobooks-skills)."
+  exit 0
+fi
+
+# -------- Detect targets (Claude Code only) --------
 # Each target is "id|label|path|detected"
 TARGETS=()
 
 CLAUDE_USER_ROOT="$HOME/.claude"
+USER_SKILLS="$CLAUDE_USER_ROOT/skills"
 [ -d "$CLAUDE_USER_ROOT" ] && DET=1 || DET=0
-TARGETS+=("claude-code-user|Claude Code (user)|$CLAUDE_USER_ROOT/skills|$DET")
+TARGETS+=("claude-code-user|Claude Code (user)|$USER_SKILLS|$DET")
 
-[ -d "$(pwd)/.claude" ] && DET=1 || DET=0
-TARGETS+=("claude-code-project|Claude Code (project)|$(pwd)/.claude/skills|$DET")
-
-[ -d "$CLAUDE_DESKTOP_ROOT" ] && DET=1 || DET=0
-TARGETS+=("claude-desktop|Claude Desktop|$CLAUDE_DESKTOP_ROOT/skills|$DET")
+PROJECT_SKILLS="$(pwd)/.claude/skills"
+# Skip the project target when it resolves to the same dir as the user target
+# (e.g. when run from $HOME), so we don't "install" twice to one place.
+if [ "$PROJECT_SKILLS" != "$USER_SKILLS" ]; then
+  [ -d "$(pwd)/.claude" ] && DET=1 || DET=0
+  TARGETS+=("claude-code-project|Claude Code (project)|$PROJECT_SKILLS|$DET")
+fi
 
 # Pick which targets get the install.
 SELECTED=()
@@ -144,7 +183,7 @@ if [ -n "$ONLY_TARGET" ]; then
     [ "$id" = "$ONLY_TARGET" ] && SELECTED+=("$entry")
   done
   if [ ${#SELECTED[@]} -eq 0 ]; then
-    err "No target matched --target $ONLY_TARGET"
+    err "No target matched --target $ONLY_TARGET (valid: claude-code-user, claude-code-project)"
     exit 2
   fi
 else
@@ -154,8 +193,7 @@ else
   done
   # If nothing detected, default to Claude Code (user) — we'll create the dir.
   if [ ${#SELECTED[@]} -eq 0 ]; then
-    warn "No Claude clients detected — installing to Claude Code (user) anyway."
-    SELECTED+=("claude-code-user|Claude Code (user)|$CLAUDE_USER_ROOT/skills|0")
+    SELECTED+=("claude-code-user|Claude Code (user)|$USER_SKILLS|0")
   fi
 fi
 
@@ -235,4 +273,16 @@ done
 
 ok "Done. Installed $TOTAL_INSTALLED skill(s) across ${#SELECTED[@]} location(s)."
 say ""
-say "${C_DIM}Try it: open Claude and say \"run a month-end close for my active client\".${C_OFF}"
+say "${C_DIM}Try it: open Claude Code and say \"run a month-end close for my active client\".${C_OFF}"
+say ""
+say "${C_DIM}Tip: in Claude Code / Cowork you can install + auto-update the whole${C_OFF}"
+say "${C_DIM}bundle as one plugin instead:${C_OFF}"
+say "${C_DIM}  /plugin marketplace add quantotechnologylabs/quantobooks-skills${C_OFF}"
+say "${C_DIM}  /plugin install quantobooks@quantobooks${C_OFF}"
+
+if [ "$DESKTOP_DETECTED" = "1" ]; then
+  say ""
+  warn "Claude Desktop detected — note these skills will NOT appear there."
+  say "${C_DIM}Desktop doesn't load filesystem skills. Use the in-app Skills uploader${C_OFF}"
+  say "${C_DIM}(download the zip from the QuantoBooks dashboard), or use Claude Code.${C_OFF}"
+fi

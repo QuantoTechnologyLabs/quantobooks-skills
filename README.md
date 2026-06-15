@@ -59,10 +59,12 @@ The `description` field is what Claude uses to decide whether to load the skill.
 
 ## Distribution (see `INSTALL.md`)
 
-Four install paths:
-1. **Shell one-liner** — `curl -fsSL https://get.quantobooks.com/skills | bash`. No Node required; macOS + Linux. Source: `install.sh` in this directory.
-2. **Node CLI** — `npx @quantobooks/skills install`. Works anywhere with Node 18+; includes Windows.
-3. **Web app "Install Skills" button** — generates the same files into a downloadable bundle for users who don't want to run a terminal command.
-4. **Manual** — clone the public repo and symlink. For power users.
+**Claude Code / Cowork** (true one-command bundle, recommended):
+1. **Plugin marketplace** — `/plugin marketplace add quantotechnologylabs/quantobooks-skills` then `/plugin install quantobooks@quantobooks`. Installs all skills as one auto-updating plugin, namespaced `quantobooks:quanto-*`. Manifests live in `../skills-plugin/`.
+2. **Shell one-liner** — `curl -fsSL https://www.quantobooks.com/api/skills/install.sh | bash`. Copies into `~/.claude/skills/`. No Node; macOS + Linux. Source: `install.sh` here.
+3. **Node CLI** — `npx @quantobooks/skills install`. Anywhere with Node 18+; includes Windows.
+4. **Manual** — clone the public repo, `cp -r skills/quanto-* ~/.claude/skills/`.
 
-The source of truth lives here in the monorepo. CI mirrors `apps/mcp-server/skills/` (including `install.sh`) to the public `quantotechnologylabs/quantobooks-skills` repo on every push to `production`, and publishes the `@quantobooks/skills` npm package from the same source.
+**Claude Desktop**: no bundle install today — it ignores filesystem skill folders and doesn't support custom plugin marketplaces. Download the zip from the dashboard and add skills via the in-app uploader (one at a time), or use Claude Code. The installers detect Desktop and say so rather than pretending.
+
+The source of truth lives here in the monorepo. CI mirrors `apps/mcp-server/skills/` (skills + `install.sh`) **and** assembles the plugin-marketplace layout from `apps/mcp-server/skills-plugin/` into the public `quantotechnologylabs/quantobooks-skills` repo on every push to `production`, and publishes the `@quantobooks/skills` npm package from the same source.
