@@ -1,5 +1,5 @@
 ---
-name: transaction-cleanup
+name: quanto-transaction-cleanup
 description: Find uncategorized or miscategorized transactions in the active client's general ledger and recategorize them in batches. Trigger phrases — "fix uncategorized transactions", "clean up the GL", "recategorize [vendor/category]", "what's in Ask My Accountant", "catch-up coding".
 ---
 

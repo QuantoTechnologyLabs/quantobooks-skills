@@ -1,5 +1,5 @@
 ---
-name: ap-pay-run
+name: quanto-ap-pay-run
 description: Build a proposed AP pay batch for the active client from aged payables, surface what's due this week, and create bill payments after confirmation. Trigger phrases — "pay run", "what bills are due", "AP pay batch", "schedule vendor payments", "what do we owe".
 ---
 

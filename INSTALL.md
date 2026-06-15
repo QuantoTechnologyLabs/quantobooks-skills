@@ -52,7 +52,7 @@ Re-run any time to update.
 
 Optional flags:
 - `--target claude-code-user` / `--target claude-desktop` — restrict client
-- `--skills month-end-close,flag-triage` — install a subset
+- `--skills quanto-month-end-close,flag-triage` — install a subset
 - `--dry-run` — preview without writing
 - `--upgrade` — explicit re-install (default behavior; flag kept for clarity)
 
@@ -103,7 +103,7 @@ You should see the QuantoBooks skills listed. To test, try:
 
 > "Run a month-end close for my active client"
 
-Claude should load the `month-end-close` skill and start by calling `get_active_client_info`.
+Claude should load the `quanto-month-end-close` skill and start by calling `get_active_client_info`.
 
 ## Updating
 

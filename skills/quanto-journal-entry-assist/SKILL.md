@@ -1,5 +1,5 @@
 ---
-name: journal-entry-assist
+name: quanto-journal-entry-assist
 description: Conversational journal entry builder for the active QuantoBooks client. User describes the entry in plain English, skill validates accounts exist, drafts the JE in QBO format, and writes it after confirmation. Trigger phrases — "make a JE", "accrue [X]", "post a journal entry", "adjusting entry for [X]", "reclass [X] to [Y]".
 ---
 

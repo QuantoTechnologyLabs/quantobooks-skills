@@ -1,5 +1,5 @@
 ---
-name: management-report
+name: quanto-management-report
 description: Generate a monthly client-facing management report for the active QuantoBooks client — P&L, BS, key ratios, MoM/YoY deltas, and 3–5 plain-English talking points. Read-only, no writes. Trigger phrases — "monthly report", "management report for [period]", "client narrative", "draft the client summary", "MoM report".
 ---
 
@@ -118,4 +118,4 @@ Output the markdown verbatim, ready to paste. Don't try to render it or "format"
 
 ## Strictly read-only
 
-No `_create`, `_update`, or `_delete` calls in this skill, ever. If the report surfaces something that needs fixing, recommend the user switch to `flag-triage` or `month-end-close` for that. The report itself is a snapshot of what's in the books, not a chance to edit them.
+No `_create`, `_update`, or `_delete` calls in this skill, ever. If the report surfaces something that needs fixing, recommend the user switch to `quanto-flag-triage` or `quanto-month-end-close` for that. The report itself is a snapshot of what's in the books, not a chance to edit them.

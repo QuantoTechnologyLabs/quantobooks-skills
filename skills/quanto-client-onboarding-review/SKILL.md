@@ -1,5 +1,5 @@
 ---
-name: client-onboarding-review
+name: quanto-client-onboarding-review
 description: Pre-engagement diagnostic for a newly added QuantoBooks client — surfaces COA hygiene issues, opening balance sanity, vendor list quality, and produces a "what needs attention before we start" report. Trigger phrases — "review the new client", "onboarding review for [client]", "what's the state of [client]'s books", "is this client ready for us".
 ---
 
@@ -111,4 +111,4 @@ End with a one-paragraph plain-English summary the firm can paste into an intern
 
 This skill is **strictly read-only**. Surface issues; don't fix them. The firm hasn't signed an engagement yet — modifying the books before the contract is signed is a liability problem.
 
-If the user wants to start cleanup, recommend they switch to `transaction-cleanup` or `flag-triage` once the engagement is signed.
+If the user wants to start cleanup, recommend they switch to `quanto-transaction-cleanup` or `quanto-flag-triage` once the engagement is signed.

@@ -1,5 +1,5 @@
 ---
-name: flag-triage
+name: quanto-flag-triage
 description: Walk through QuantoBooks action items (flags) for the active client one by one, propose a resolution for each (fix, snooze, or accept), and write back to QuickBooks after confirmation. The bread-and-butter daily skill. Trigger phrases — "what needs my attention", "go through the flags", "triage the action items", "fix the issues Quanto found".
 ---
 
@@ -56,7 +56,7 @@ Three options. Show your proposed action; let the user pick.
 
 **Fix.** Most common. Draft the QBO write:
 - *Recategorization:* `qbo_purchase_update`, `qbo_bill_update`, etc. — change `AccountRef` to the right account.
-- *Adjusting JE:* invoke `journal-entry-assist`.
+- *Adjusting JE:* invoke `quanto-journal-entry-assist`.
 - *Voiding / deleting a bad transaction:* `qbo_<entity>_delete`. **Extra confirmation required** (see foundation guard).
 - *Vendor / customer fix:* `qbo_vendor_update`, `qbo_customer_update`.
 
@@ -81,7 +81,7 @@ After each disposition, immediately present the next 1–3 items. Don't ask "sha
 When the queue is empty:
 - Count: *"Disposed of 12 flags — 8 fixed, 3 snoozed, 1 accepted."*
 - Surface anything you left for later: *"2 criticals deferred at your request: [...]"*
-- Offer a one-line next-step: *"Want to run `month-end-close` now, or stop here?"*
+- Offer a one-line next-step: *"Want to run `quanto-month-end-close` now, or stop here?"*
 
 ## Things that should NEVER happen
 

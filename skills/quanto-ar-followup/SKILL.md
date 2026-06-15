@@ -1,5 +1,5 @@
 ---
-name: ar-followup
+name: quanto-ar-followup
 description: Walk through overdue accounts receivable for the active client, draft follow-up notes per invoice, and optionally apply received payments. Trigger phrases — "follow up on AR", "who owes us money", "overdue invoices", "AR collections", "send dunning notes".
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: document-lookup
+name: quanto-document-lookup
 description: Find and read supporting documents (receipts, statements, invoices, contracts) attached to the active QuantoBooks client. Trigger phrases — "find the receipt for [X]", "what document supports [Y]", "look up the statement for [Z]", "where's the bill from [vendor]".
 ---
 

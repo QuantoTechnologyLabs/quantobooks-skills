@@ -1,5 +1,5 @@
 ---
-name: month-end-close
+name: quanto-month-end-close
 description: Run a month-end close for the active QuantoBooks client. Pulls the financial period, walks the action checklist, runs balance sheet / P&L / trial balance review in order, and ends with a "ready to close?" summary. Trigger phrases the user is likely to say — "close November", "run month-end for [client]", "is [period] ready to close", "do the close".
 ---
 
@@ -33,7 +33,7 @@ Call `quanto_action_checklist` filtered to the target period. Group items by `ri
 4. `LOW`
 
 For each item show: title, account/transaction reference, the reviewer note. Ask the user how they want to handle the criticals before continuing. For each one, the user's options are:
-- **Fix** — invoke the `flag-triage` skill on that item (it knows how to draft the fix and write it back).
+- **Fix** — invoke the `quanto-flag-triage` skill on that item (it knows how to draft the fix and write it back).
 - **Snooze** — record via `quanto_flag_snoozes` (you'll need a reason).
 - **Accept** — mark reviewed via `quanto_action_checklist_reviewed`.
 
@@ -44,7 +44,7 @@ Call `quanto_balance_sheet_report` for the target period. For each account flagg
 - Movement summary
 - Anomalies surfaced by Quanto
 
-Ask the user whether each flagged account needs an adjusting JE. If yes, invoke `journal-entry-assist`.
+Ask the user whether each flagged account needs an adjusting JE. If yes, invoke `quanto-journal-entry-assist`.
 
 ### Step 4 — P&L review
 
@@ -84,8 +84,8 @@ Do not call any "mark closed" write tool automatically — that is the user's de
 | P&L review | `quanto_profit_and_loss_report`, `quanto_profit_and_loss_account_analysis` | quanto |
 | TB check | `quanto_trial_balance_report`, `quanto_trial_balance_account_analysis` | quanto |
 | Engagement context | `karbon_work_item_query` | karbon |
-| Adjusting JEs | invoke `journal-entry-assist` skill | qbo (write) |
-| Flag fixes | invoke `flag-triage` skill | qbo (write) |
+| Adjusting JEs | invoke `quanto-journal-entry-assist` skill | qbo (write) |
+| Flag fixes | invoke `quanto-flag-triage` skill | qbo (write) |
 
 You should rarely hit live QBO directly during a close — Quanto's data is exactly what was built for this. If you do (e.g., user asks "what was the largest expense"), prefer `quanto_general_ledger_transaction_analysis` over `qbo_report_general_ledger`.
 

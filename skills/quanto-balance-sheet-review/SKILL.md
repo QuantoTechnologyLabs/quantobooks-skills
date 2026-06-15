@@ -1,5 +1,5 @@
 ---
-name: balance-sheet-review
+name: quanto-balance-sheet-review
 description: Account-by-account balance sheet roll-forward for the active QuantoBooks client. Pulls the period's BS, drills into each flagged account, and proposes adjusting journal entries when needed. Trigger phrases — "review the balance sheet", "BS review for [period]", "what's wrong with the balance sheet", "reconcile balance sheet accounts".
 ---
 
@@ -42,7 +42,7 @@ For each flagged account:
    - **Missing accrual** — recurring expense not yet accrued
    - **Reclass needed** — balance posted to wrong account
 
-3. Propose the fix. Most are adjusting JEs — invoke `journal-entry-assist`. For account-level changes (rename, archive), invoke `qbo_account_update` with confirmation.
+3. Propose the fix. Most are adjusting JEs — invoke `quanto-journal-entry-assist`. For account-level changes (rename, archive), invoke `qbo_account_update` with confirmation.
 
 ### Step 4 — Cross-check categories
 
@@ -70,7 +70,7 @@ End with:
 | AR aging cross-check | `qbo_report_aged_receivables` |
 | AP aging cross-check | `qbo_report_aged_payables` |
 | GL for unusual activity | `quanto_general_ledger_report`, `quanto_general_ledger_transaction_analysis` |
-| Adjusting JE | invoke `journal-entry-assist` |
+| Adjusting JE | invoke `quanto-journal-entry-assist` |
 
 ## What's out of scope
 

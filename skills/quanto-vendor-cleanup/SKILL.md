@@ -1,5 +1,5 @@
 ---
-name: vendor-cleanup
+name: quanto-vendor-cleanup
 description: Find and fix vendor-list problems for the active client — duplicates, missing TIN/W9, inconsistent naming, classification gaps. Trigger phrases — "clean up vendors", "vendor list audit", "find duplicate vendors", "vendor hygiene", "fix vendor names".
 ---
 
@@ -68,7 +68,7 @@ For any vendor with >50 transactions YTD, do a quick sanity check via `quanto_ve
 - Are there unusual amount spikes?
 - Is the vendor's role clear (one expense category vs. scattered)?
 
-Surface, don't fix automatically — most of these need recategorization via `transaction-cleanup`, not vendor-record changes.
+Surface, don't fix automatically — most of these need recategorization via `quanto-transaction-cleanup`, not vendor-record changes.
 
 ### Step 4 — Wrap-up
 

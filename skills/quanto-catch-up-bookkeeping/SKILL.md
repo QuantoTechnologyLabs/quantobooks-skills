@@ -1,5 +1,5 @@
 ---
-name: catch-up-bookkeeping
+name: quanto-catch-up-bookkeeping
 description: Multi-period close loop for clients whose books are months behind. Walks through each open period in order, runs an abbreviated close on each, and accumulates a cumulative "what's still broken" list. Trigger phrases — "catch up [client]'s books", "we're 6 months behind", "clean up [date range]", "back-bookkeeping for [client]".
 ---
 
@@ -47,8 +47,8 @@ Catch-up sessions are long. Set explicit checkpoints:
 
 In strict chronological order, for each period:
 
-1. **Transaction cleanup** — invoke `transaction-cleanup` scoped to this period. Get uncategorized down to zero (or near it).
-2. **Flag triage** — invoke `flag-triage` scoped to this period. Resolve CRITICAL/HIGH.
+1. **Transaction cleanup** — invoke `quanto-transaction-cleanup` scoped to this period. Get uncategorized down to zero (or near it).
+2. **Flag triage** — invoke `quanto-flag-triage` scoped to this period. Resolve CRITICAL/HIGH.
 3. **Quick BS sanity** — `quanto_balance_sheet_report` for this period. Does it balance? Does the ending balance look plausible vs. last period?
 4. **Period summary** — note count of transactions cleaned, flags resolved, JEs written.
 
@@ -93,7 +93,7 @@ Produce:
 
 ## Tool cheat sheet
 
-Use the same tools the per-period skills use. Catch-up is an orchestrator over `transaction-cleanup`, `flag-triage`, and `balance-sheet-review`. Don't re-implement their playbooks — invoke them.
+Use the same tools the per-period skills use. Catch-up is an orchestrator over `quanto-transaction-cleanup`, `quanto-flag-triage`, and `quanto-balance-sheet-review`. Don't re-implement their playbooks — invoke them.
 
 ## Things to NEVER do
 

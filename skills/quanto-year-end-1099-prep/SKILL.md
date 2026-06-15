@@ -1,5 +1,5 @@
 ---
-name: year-end-1099-prep
+name: quanto-year-end-1099-prep
 description: Audit the active client's vendor list against the year's 1099-eligible payments — surfaces missing TINs, classification gaps, and payment totals so the firm can file 1099-NECs. Trigger phrases — "1099 prep", "vendor 1099 audit", "who needs a 1099", "year-end vendor cleanup", "ready for 1099s".
 ---
 

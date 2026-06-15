@@ -1,21 +1,21 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "skills": [
     "quanto-client-context",
-    "month-end-close",
-    "flag-triage",
-    "balance-sheet-review",
-    "transaction-cleanup",
-    "client-onboarding-review",
-    "ar-followup",
-    "ap-pay-run",
-    "vendor-cleanup",
-    "management-report",
-    "year-end-1099-prep",
-    "catch-up-bookkeeping",
-    "journal-entry-assist",
-    "document-lookup"
+    "quanto-month-end-close",
+    "quanto-flag-triage",
+    "quanto-balance-sheet-review",
+    "quanto-transaction-cleanup",
+    "quanto-client-onboarding-review",
+    "quanto-ar-followup",
+    "quanto-ap-pay-run",
+    "quanto-vendor-cleanup",
+    "quanto-management-report",
+    "quanto-year-end-1099-prep",
+    "quanto-catch-up-bookkeeping",
+    "quanto-journal-entry-assist",
+    "quanto-document-lookup"
   ],
   "minMcpServerVersion": "0.1.0",
-  "releaseNotes": "0.2.0 — Karbon practice-management context. The foundation guard (quanto-client-context) now documents the karbon_* tool tier (client profile, work items, notes, note comments) as an optional, read-only context source for mapped clients. client-onboarding-review, document-lookup, flag-triage, management-report, and month-end-close gained conditional Karbon steps so they fold in client profile / engagement / relationship context when present. All additive and best-effort — skills skip Karbon silently when a client isn't mapped. 0.1.0 — Initial skill bundle: foundation client-context guard + 13 workflow skills (tier 1: month-end-close, flag-triage, balance-sheet-review, transaction-cleanup, client-onboarding-review; tier 2: ar-followup, ap-pay-run, vendor-cleanup, management-report; tier 3: year-end-1099-prep, catch-up-bookkeeping, journal-entry-assist, document-lookup). Bank rec, payroll, and sales tax intentionally excluded — see README."
+  "releaseNotes": "0.3.0 — Prefix every skill with `quanto-` so QuantoBooks skills stay identifiable when users have many skills installed from different sources. Directory names + YAML `name:` frontmatter + all cross-skill references updated. NOTE: if you were installed at v0.2.0, the old unprefixed directories will be left behind in your skills folder — re-run the installer to clean them up (or delete the unprefixed copies by hand). 0.2.0 — Karbon practice-management context. The foundation guard (quanto-client-context) now documents the karbon_* tool tier (client profile, work items, notes, note comments) as an optional, read-only context source for mapped clients. quanto-client-onboarding-review, quanto-document-lookup, quanto-flag-triage, quanto-management-report, and quanto-month-end-close gained conditional Karbon steps so they fold in client profile / engagement / relationship context when present. All additive and best-effort — skills skip Karbon silently when a client isn't mapped. 0.1.0 — Initial skill bundle: foundation client-context guard + 13 workflow skills."
 }
