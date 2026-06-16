@@ -68,6 +68,10 @@ End with:
 - Accounts that changed (e.g., "Ask My Accountant down from $4,212.18 to $0.00")
 - Anything you skipped and why
 
+### Step 7 — Offer to make it recurring (optional)
+
+GL hygiene is ongoing — most firms sweep uncategorized transactions weekly. If the user does this on a cadence for the client, offer to schedule a recurring review-only run via `quanto-schedule-workflow`: it surfaces the new uncategorized/miscoded transactions and proposes categorizations for the user to approve, but never recategorizes unattended.
+
 ## Account-selection tips
 
 When proposing a target account, prefer accounts that:

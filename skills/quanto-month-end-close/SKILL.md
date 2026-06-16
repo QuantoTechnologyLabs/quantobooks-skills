@@ -74,6 +74,10 @@ Produce a written summary with:
 
 Do not call any "mark closed" write tool automatically — that is the user's decision and one click in the dashboard.
 
+If the user wants a visual snapshot of the period — flags by risk, scorecard, status — invoke `quanto-report-templates` and fill the **financial period dashboard** template with the period data you already pulled. Renders inline in Cowork; a saved `.html` file in Claude Code.
+
+A close runs every month-end. If this client closes on a predictable cadence (e.g. "run the close on the 3rd business day"), offer to schedule a recurring review-only run via `quanto-schedule-workflow` — it prepares the close and surfaces what needs the user's decision; it never marks the period closed or posts a JE unattended.
+
 ## Tool cheat sheet
 
 | Step | Tool | Tier |

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{CLIENT_NAME}} — {{PERIOD_LABEL}} Management Report</title>
+<!--
+  SAMPLE DATA — replace every {{PLACEHOLDER}} with the active client's real
+  figures (from the quanto_* tools the workflow already pulled). For the
+  repeatable blocks marked "REPEAT", duplicate the block once per row.
+
+  {{CLIENT_NAME}}      = "Acme Corp"
+  {{PERIOD_LABEL}}     = "November 2025"
+  {{ACCOUNTING_METHOD}}= "Accrual"
+  {{AS_OF}}            = "as of Nov 30, 2025"
+  KPI cards: value + delta. delta_dir = "up" | "down" | "flat".
+  P&L rows: label, amount, mom_pct.
+  Talking points: 3–5 plain-English bullets.
+  Omit any card/row you don't have data for — never guess a number.
+-->
+<style>
+  :root {
+    --brand: #2563eb;        /* QuantoBooks blue */
+    --ink: #111827;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg: #ffffff;
+    --soft: #f9fafb;
+    --up: #16a34a;
+    --down: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--soft); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; line-height: 1.45;
+  }
+  .sheet { max-width: 880px; margin: 24px auto; background: var(--bg);
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  header { display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; padding: 22px 28px; border-bottom: 1px solid var(--line); }
+  .brand { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+  .brand b { color: var(--brand); }
+  .brand .sub { display: block; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .title { text-align: right; }
+  .title h1 { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
+  .title .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--line); border-bottom: 1px solid var(--line); }
+  .card { background: var(--bg); padding: 16px 18px; }
+  .card .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .card .v { font-size: 22px; font-weight: 650; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .card .d { font-size: 12px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .d.up { color: var(--up); } .d.down { color: var(--down); } .d.flat { color: var(--muted); }
+  section { padding: 20px 28px; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: 0; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 0 0 12px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 7px 0; font-size: 14px; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); border-bottom: 1px solid var(--line); }
+  tbody tr + tr td { border-top: 1px solid var(--soft); }
+  td.delta.up { color: var(--up); } td.delta.down { color: var(--down); }
+  ul.points { margin: 0; padding-left: 18px; }
+  ul.points li { margin: 6px 0; font-size: 14px; }
+  footer { padding: 14px 28px; font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <header>
+      <div class="brand">Quanto<b>Books</b><span class="sub">Management Report</span></div>
+      <div class="title">
+        <h1>{{CLIENT_NAME}}</h1>
+        <div class="meta">{{PERIOD_LABEL}} · {{ACCOUNTING_METHOD}} basis · {{AS_OF}}</div>
+      </div>
+    </header>
+
+    <!-- KPI cards. REPEAT the .card block per KPI (aim for 4). -->
+    <div class="cards">
+      <div class="card">
+        <div class="k">Revenue</div>
+        <div class="v">{{KPI_1_VALUE}}</div>
+        <div class="d {{KPI_1_DIR}}">{{KPI_1_DELTA}}</div>
+      </div>
+      <div class="card">
+        <div class="k">Net income</div>
+        <div class="v">{{KPI_2_VALUE}}</div>
+        <div class="d {{KPI_2_DIR}}">{{KPI_2_DELTA}}</div>
+      </div>
+      <div class="card">
+        <div class="k">Cash position</div>
+        <div class="v">{{KPI_3_VALUE}}</div>
+        <div class="d {{KPI_3_DIR}}">{{KPI_3_DELTA}}</div>
+      </div>
+      <div class="card">
+        <div class="k">{{KPI_4_LABEL}}</div>
+        <div class="v">{{KPI_4_VALUE}}</div>
+        <div class="d {{KPI_4_DIR}}">{{KPI_4_DELTA}}</div>
+      </div>
+    </div>
+
+    <section>
+      <h2>Profit &amp; loss summary</h2>
+      <table>
+        <thead>
+          <tr><th>Line</th><th>{{PERIOD_LABEL}}</th><th>MoM</th><th>YoY</th></tr>
+        </thead>
+        <tbody>
+          <!-- REPEAT this row per P&L line (Revenue, COGS, Gross profit, Opex, Net income) -->
+          <tr>
+            <td>{{PL_ROW_LABEL}}</td>
+            <td>{{PL_ROW_AMOUNT}}</td>
+            <td class="delta {{PL_ROW_MOM_DIR}}">{{PL_ROW_MOM}}</td>
+            <td class="delta {{PL_ROW_YOY_DIR}}">{{PL_ROW_YOY}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>What drove the numbers</h2>
+      <ul class="points">
+        <!-- REPEAT one <li> per talking point (3–5) -->
+        <li>{{TALKING_POINT}}</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>What to watch next period</h2>
+      <ul class="points">
+        <li>{{WATCH_ITEM}}</li>
+      </ul>
+    </section>
+
+    <footer>
+      <span>Prepared with QuantoBooks · figures from QuickBooks Online</span>
+      <span>{{PREPARED_BY}}</span>
+    </footer>
+  </div>
+</body>
+</html>

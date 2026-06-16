@@ -9,14 +9,18 @@ Every other QuantoBooks skill begins by following the rules below. They are not 
 
 ## 1. Confirm the active client BEFORE any data call
 
-On the first tool call of a QuantoBooks workflow:
+**The intended setup is one project per managed client** — a firm keeps a Cowork/Claude Code project per client and works that client's books inside it. Use that: the project you're in is a strong signal for *which* client, but never a silent substitute for confirming it.
 
-1. Call `get_active_client_info`. If it returns no active client, call `list_clients` and ask the user which one to use, then `switch_client`.
-2. Echo the active client's display name back to the user in plain text: *"Working on **Acme Corp** (QBO realm 1234567890)."* Do this even if the user did not ask — it is the cheapest possible mistake-catcher.
-3. If the user's message mentions a client by name (or hints at one — *"the dental practice"*, *"my Stripe client"*) and it does not match the active client, **do not assume**. Call `list_clients`, surface the matches, and ask which to switch to before continuing.
-4. If multiple clients match an ambiguous reference, list them and ask.
+On the first tool call of a QuantoBooks workflow, resolve the client in this order:
 
-After a `switch_client`, re-echo the new active client before proceeding.
+1. **Did the user name a client?** If the message names one (or hints at one — *"the dental practice"*, *"my Stripe client"*), that wins. Call `list_clients`, find the match, `switch_client` if it isn't already active. If the hint is ambiguous or matches several, list the candidates and ask.
+2. **No client named → infer from the project, then confirm.** Call `list_clients` and compare the **current project / workspace name** against the client names. If one client clearly matches the project name (exact or obvious — "Acme Corp" project ↔ "Acme Corp" client), propose it and switch: *"This looks like the **Acme Corp** project — working on Acme Corp's books. Say the word if that's wrong."* This is a confirm-and-proceed, not a silent assumption — you've told the user which books you're about to touch and given them a one-word veto.
+3. **No clear project match → check the active client.** Call `get_active_client_info`. If there's an active client, echo it and proceed (the user can redirect). If there's no active client and the project name didn't resolve one, **ask explicitly** — list the clients and have the user pick. Never guess when there's no confident signal.
+4. **Always echo.** Whatever path you took, state the active client in plain text before any data call: *"Working on **Acme Corp** (QBO realm 1234567890)."* It's the cheapest mistake-catcher there is.
+
+Matching rules: an exact or near-exact project↔client name match is enough to propose-and-confirm. A weak/partial match (one shared word, a guess) is NOT — fall through to asking. When two clients could both match, always ask. The cost of touching the wrong client's books is far higher than one clarifying question.
+
+After any `switch_client`, re-echo the new active client before proceeding.
 
 ## 2. Pick the right tool tier
 

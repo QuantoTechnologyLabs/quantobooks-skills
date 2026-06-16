@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{CLIENT_NAME}} — {{PERIOD_LABEL}} Financial Period</title>
+<!--
+  SAMPLE DATA — replace every {{PLACEHOLDER}} with the active client's real
+  data (from quanto_financial_period / quanto_action_checklist). Duplicate the
+  blocks marked "REPEAT" once per item.
+
+  {{CLIENT_NAME}}    = "Acme Corp"
+  {{PERIOD_LABEL}}   = "November 2025"
+  {{STATUS}}         = "In review" | "Ready to close" | "Closed"
+  {{STATUS_CLASS}}   = "review" | "ready" | "closed"
+  {{SCORE}}          = "82" (0–100, omit if none)
+  Counts per risk level: critical, high, medium, low.
+  Flag rows: title, account/ref, risk (CRITICAL|HIGH|MEDIUM|LOW), note.
+  Omit any section you don't have data for — never invent a flag or a score.
+-->
+<style>
+  :root {
+    --brand: #2563eb; --ink: #111827; --muted: #6b7280; --line: #e5e7eb;
+    --bg: #ffffff; --soft: #f9fafb;
+    --critical: #dc2626; --high: #ea580c; --medium: #d97706; --low: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--soft); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; line-height: 1.45; }
+  .sheet { max-width: 880px; margin: 24px auto; background: var(--bg);
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  header { display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; padding: 22px 28px; border-bottom: 1px solid var(--line); }
+  .brand { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+  .brand b { color: var(--brand); }
+  .brand .sub { display: block; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .title { text-align: right; }
+  .title h1 { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
+  .title .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .status { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px;
+    border-radius: 999px; margin-top: 6px; }
+  .status.review { background: #eff6ff; color: var(--brand); }
+  .status.ready { background: #ecfdf5; color: #16a34a; }
+  .status.closed { background: #f3f4f6; color: var(--muted); }
+  .summary { display: grid; grid-template-columns: 1.2fr repeat(4, 1fr); gap: 1px;
+    background: var(--line); border-bottom: 1px solid var(--line); }
+  .cell { background: var(--bg); padding: 16px 18px; }
+  .cell .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .cell .v { font-size: 24px; font-weight: 650; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .cell.crit .v { color: var(--critical); } .cell.high .v { color: var(--high); }
+  .cell.med .v { color: var(--medium); } .cell.low .v { color: var(--low); }
+  section { padding: 20px 28px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 0 0 12px; }
+  .flag { display: grid; grid-template-columns: 90px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--soft); }
+  .flag:first-child { border-top: 0; }
+  .pill { font-size: 10px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 6px; text-align: center; align-self: start; }
+  .pill.CRITICAL { background: #fef2f2; color: var(--critical); }
+  .pill.HIGH { background: #fff7ed; color: var(--high); }
+  .pill.MEDIUM { background: #fffbeb; color: var(--medium); }
+  .pill.LOW { background: #f0fdf4; color: var(--low); }
+  .flag .ttl { font-size: 14px; font-weight: 600; }
+  .flag .ref { font-size: 12px; color: var(--brand); margin-left: 6px; font-weight: 500; }
+  .flag .note { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .empty { font-size: 14px; color: var(--muted); padding: 8px 0; }
+  footer { padding: 14px 28px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <header>
+      <div class="brand">Quanto<b>Books</b><span class="sub">Financial Period Review</span></div>
+      <div class="title">
+        <h1>{{CLIENT_NAME}}</h1>
+        <div class="meta">{{PERIOD_LABEL}}</div>
+        <span class="status {{STATUS_CLASS}}">{{STATUS}}</span>
+      </div>
+    </header>
+
+    <div class="summary">
+      <div class="cell"><div class="k">Quanto score</div><div class="v">{{SCORE}}</div></div>
+      <div class="cell crit"><div class="k">Critical</div><div class="v">{{COUNT_CRITICAL}}</div></div>
+      <div class="cell high"><div class="k">High</div><div class="v">{{COUNT_HIGH}}</div></div>
+      <div class="cell med"><div class="k">Medium</div><div class="v">{{COUNT_MEDIUM}}</div></div>
+      <div class="cell low"><div class="k">Low</div><div class="v">{{COUNT_LOW}}</div></div>
+    </div>
+
+    <section>
+      <h2>Open flags (highest risk first)</h2>
+      <!-- REPEAT this .flag block per open flag, sorted CRITICAL → LOW.
+           Set the pill class to the risk level. If there are no open flags,
+           replace the whole list with: <div class="empty">No open flags — period is clean.</div> -->
+      <div class="flag">
+        <span class="pill {{FLAG_RISK}}">{{FLAG_RISK}}</span>
+        <div>
+          <div class="ttl">{{FLAG_TITLE}}<span class="ref">{{FLAG_REF}}</span></div>
+          <div class="note">{{FLAG_NOTE}}</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <span>Prepared with QuantoBooks · reviewed data, not raw QuickBooks</span>
+      <span>{{AS_OF}}</span>
+    </footer>
+  </div>
+</body>
+</html>

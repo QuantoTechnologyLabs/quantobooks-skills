@@ -105,6 +105,14 @@ Match the firm's voice. Default rules:
 
 Output the markdown verbatim, ready to paste. Don't try to render it or "format" it further — let the user's downstream tool handle that.
 
+### Step 9 — Offer the visual version (optional)
+
+If the user wants something more polished to send the client — "make it a dashboard / one-pager / something I can screenshot" — invoke `quanto-report-templates` and fill the **management report** template with the figures you just computed. In Cowork it renders as an inline HTML preview; in Claude Code you write the `.html` file and give them the path. Don't re-fetch data you already have, and never fill a card with a number you didn't actually compute.
+
+### Step 10 — Offer to make it recurring (optional)
+
+A management report goes out every month. If the user produces this on a cadence for the client, offer to schedule a recurring run via `quanto-schedule-workflow` — it drafts the report for the user's review each period (read-only by nature, so there's nothing unsafe to automate here). One schedule per client.
+
 ## Tool cheat sheet
 
 | Purpose | Tool | Tier |

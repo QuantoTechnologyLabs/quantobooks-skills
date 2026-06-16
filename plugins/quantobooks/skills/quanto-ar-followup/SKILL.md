@@ -75,6 +75,10 @@ End with:
 - Customers flagged for escalation
 - Suggested next session date
 
+### Step 7 — Offer to make it recurring (optional)
+
+AR follow-up is naturally weekly. If the user runs it on a cadence for this client — "do this every Monday before our meeting" — offer to set up a recurring run via `quanto-schedule-workflow`, pinned to this client. Note it'll run review-only (draft the follow-ups, never auto-send or auto-apply payments). Don't push it; just offer once.
+
 ## Tool cheat sheet
 
 | Purpose | Tool | Tier |

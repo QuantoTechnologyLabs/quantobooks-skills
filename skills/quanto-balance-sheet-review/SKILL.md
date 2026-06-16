@@ -61,6 +61,10 @@ End with:
 - Open issues you couldn't resolve (and why)
 - A one-line readiness statement: *"BS clean for close" / "BS has 2 open items: [...]"*
 
+### Step 6 — Offer to make it recurring (optional)
+
+The BS review is a monthly close ritual. If the user runs it on a cadence for the client, offer to schedule a recurring review-only run via `quanto-schedule-workflow` — it walks the flagged accounts and drafts adjusting JEs for the user's approval, but never posts a JE unattended.
+
 ## Tool cheat sheet
 
 | Purpose | Tool |

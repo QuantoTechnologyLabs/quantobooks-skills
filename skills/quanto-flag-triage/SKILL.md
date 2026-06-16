@@ -82,6 +82,7 @@ When the queue is empty:
 - Count: *"Disposed of 12 flags — 8 fixed, 3 snoozed, 1 accepted."*
 - Surface anything you left for later: *"2 criticals deferred at your request: [...]"*
 - Offer a one-line next-step: *"Want to run `quanto-month-end-close` now, or stop here?"*
+- If the user triages this client regularly, offer to schedule a recurring review-only sweep via `quanto-schedule-workflow` (it surfaces the day's flags for this client on a cadence; it never disposes of a flag unattended).
 
 ## Things that should NEVER happen
 

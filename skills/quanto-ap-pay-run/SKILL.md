@@ -83,6 +83,10 @@ End with:
 - Vendors with no bills left in the queue
 - Next pay-run recommendation date
 
+### Step 8 — Offer to make it recurring (optional)
+
+Pay runs are usually weekly. If the user runs this on a cadence for the client, offer to schedule a recurring run via `quanto-schedule-workflow`. **Be explicit that the scheduled run is review-only** — it builds the proposed pay batch and surfaces what's due so it's ready when the user sits down, but it never creates a bill payment unattended. Money out is always a human decision.
+
 ## Tool cheat sheet
 
 | Purpose | Tool | Tier |

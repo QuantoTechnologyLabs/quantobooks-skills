@@ -6,19 +6,36 @@ not — see the note at the bottom.
 
 ## Path 1 — Plugin marketplace (recommended for Claude Code / Cowork)
 
-In Claude Code (or Cowork), run:
+All skills install as one plugin, namespaced `quantobooks:quanto-*`, and
+update in place. There are two ways to add it depending on your client.
+
+### Claude Code (CLI) — slash commands
 
 ```
 /plugin marketplace add quantotechnologylabs/quantobooks-skills
 /plugin install quantobooks@quantobooks
 ```
 
-That's it — all skills install as one plugin, namespaced as
-`quantobooks:quanto-month-end-close`, `quantobooks:quanto-flag-triage`, etc.,
-and update with `/plugin update quantobooks@quantobooks`.
+Update later with `/plugin update quantobooks@quantobooks`. Restart Claude
+Code so it picks up the new skills.
 
-This is the cleanest path: one unit, auto-updating, no loose files. Restart
-Claude Code after installing so it picks up the new skills.
+### Cowork (Claude desktop app) — UI, not slash commands
+
+Cowork doesn't take `/plugin` commands — you add the marketplace through the
+**Customize** panel:
+
+1. Open **Customize** (the toolbox icon).
+2. Under **Personal plugins**, click the **+**.
+3. Choose **Create plugin → Add marketplace**.
+4. Paste the marketplace repo: `quantotechnologylabs/quantobooks-skills`
+   (or the full URL `https://github.com/quantotechnologylabs/quantobooks-skills`).
+5. Once the marketplace is added, install the **quantobooks** plugin from it.
+
+The plugin then appears under **Personal plugins → Quantobooks**, and all 14
+skills are available in your Cowork sessions. To update, re-open the plugin
+from the same menu and pull the latest.
+
+This is the cleanest path on either client: one unit, updatable, no loose files.
 
 ## Path 2 — One-line shell installer (Claude Code, no Node required)
 
