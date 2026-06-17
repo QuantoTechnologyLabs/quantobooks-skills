@@ -31,9 +31,11 @@ Cowork doesn't take `/plugin` commands — you add the marketplace through the
    (or the full URL `https://github.com/quantotechnologylabs/quantobooks-skills`).
 5. Once the marketplace is added, install the **quantobooks** plugin from it.
 
-The plugin then appears under **Personal plugins → Quantobooks**, and all 14
-skills are available in your Cowork sessions. To update, re-open the plugin
-from the same menu and pull the latest.
+The plugin then appears under **Personal plugins → Quantobooks**; enable it
+(the toggle by the version) and its skills are available in your Cowork
+sessions. Updating later is a marketplace-refresh + Update — see
+[Updating](#updating) (Cowork caches the catalog, so a plain "Update" may not
+notice a new version until you refresh the marketplace).
 
 This is the cleanest path on either client: one unit, updatable, no loose files.
 
@@ -123,8 +125,44 @@ re-run the installer / re-add the plugin and restart.
 
 ## Updating
 
-- **Plugin marketplace:** `/plugin update quantobooks@quantobooks`
-- **Shell / npx:** re-run the installer (it overwrites in place).
+Claude clients **cache the marketplace catalog and don't auto-refresh it**, so
+"update" means: refresh the marketplace catalog first, then update the plugin.
+Skip the refresh and the client still thinks your installed version is the
+latest and won't offer the new one.
+
+> **`/plugin` commands only exist in the full Claude Code _terminal_ app.**
+> They are NOT available in Cowork (the desktop app has no slash commands) or
+> in embedded / Agent-SDK sessions — there you'll get *"/plugin isn't available
+> in this environment."* Update via the UI instead (below).
+
+- **Claude Code (terminal CLI only):**
+  ```
+  /plugin marketplace update quantobooks
+  /plugin update quantobooks@quantobooks
+  ```
+  Restart Claude Code afterward.
+
+- **Cowork (desktop app) — UI, no slash commands:** open **Customize →
+  Personal plugins → Quantobooks**, make sure it's **enabled**, and click
+  **Update**. Cowork caches the catalog, so Update often won't see the new
+  version. When that happens (Update greyed out, or it still shows the old
+  number), **force a fresh fetch by removing and re-adding the marketplace**:
+  1. **⋮** menu (top-right) → remove the `quantobooks-skills` **marketplace**
+     (not just disable the plugin).
+  2. **+** by Personal plugins → **Create plugin → Add marketplace** →
+     `quantotechnologylabs/quantobooks-skills`.
+  3. Install the **quantobooks** plugin from it and enable it — now on the
+     latest version.
+  4. Still stale after that? **Fully quit and reopen the Cowork app** (clears
+     the in-memory catalog cache), then redo 2–3.
+
+- **Shell / npx (loose-file install, Claude Code only):** re-run the installer
+  — it overwrites in place.
+
+> Sanity check: the live marketplace version is in
+> [`version.json`](https://github.com/quantotechnologylabs/quantobooks-skills/blob/main/version.json)
+> at the mirror root. If your client shows an older number than that after a
+> refresh + update, it's a client cache issue, not a publish issue.
 
 ## Uninstall
 
