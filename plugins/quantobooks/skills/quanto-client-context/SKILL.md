@@ -36,6 +36,8 @@ Fall back to `qbo_*` only when:
 
 When you fall back, say so out loud: *"Quanto doesn't have an aged-receivables view, so pulling this live from QBO."* The user should always know which surface answered.
 
+**Searching the knowledge base: search first, then drill in.** To find anything in documents or notes — "what does our SOP say about X", "find the loan amortization schedule", "what did we note about this client" — **always start with `quanto_knowledge_base_search`**, not by guessing file names. One semantic call spans uploaded documents, Google Drive files, firm-wide SOPs, and Karbon records, across both client and firm scope, and returns the matching snippets. Each hit carries the `document_id` (and `chunk_index`) of the chunk that matched, so when the user wants the full document you drill in with `quanto_document_get` / `quanto_firm_document_get` / `karbon_*_get`. The `quanto_document_query` / `quanto_firm_document_query` tools only match file names and metadata (never the contents) — they're for browsing, not finding. And if a document looks empty or stuck (status not `completed`, no extracted text), don't conclude the content is missing — search returns the readable copy that's been ingested from another source. (The `quanto-document-lookup` skill covers this in depth.)
+
 ## 3. Gate every write
 
 A write is any `qbo_*_create`, `qbo_*_update`, `qbo_*_delete`, or `qbo_company_info_update`. Before calling any of them:
