@@ -18,6 +18,10 @@ Skills encode that. Each one:
 ### Foundation
 - **`quanto-client-context`** — the cross-cutting client-confirmation + tool-selection guard. Every other skill references it.
 
+### Utilities — cross-cutting infrastructure
+- **`quanto-schedule-workflow`** — set up / change / cancel a recurring run of any other skill for one client (review-only, pinned to a `client_id`). The recurrence engine the workhorses and monitors hand off to.
+- **`quanto-report-templates`** — branded HTML dashboard templates that report skills (management report, financial period) fill with MCP data and render.
+
 ### Tier 1 — daily / monthly workhorses
 - **`quanto-month-end-close`** — full close orchestration: financial period → action checklist → BS / P&L / TB review → unresolved-flags summary.
 - **`quanto-flag-triage`** — walks the `quanto_action_checklist` in priority order, proposes resolutions, writes back with confirmation.
@@ -30,6 +34,13 @@ Skills encode that. Each one:
 - **`quanto-ap-pay-run`** — aged payables → proposed pay batch → bill payment creation.
 - **`quanto-vendor-cleanup`** — duplicate vendors, missing TIN/W9, inconsistent naming.
 - **`quanto-management-report`** — monthly client-facing narrative: P&L, BS, ratios, deltas, 3–5 talking points. No writes.
+- **`quanto-client-briefing`** — internal pre-call brief: fans across QBO movement, Quanto flags, Karbon work items / notes, and recent documents over a "since last call" window into a one-page "what changed / what to raise / what they'll ask". Read-only; re-offers to schedule itself before every standing call.
+
+### Monitors — read-only recurring watches (built to schedule)
+- **`quanto-cash-flow-watch`** — weekly cash position, net burn/build, expected AR-in vs AP-out, and a directional runway estimate. No writes.
+- **`quanto-spend-watch`** — proactive between-close monitor: new vendors, unusually large or duplicate payments, subscription creep. No writes.
+- **`quanto-missing-docs-chase`** — documentation-completeness audit: finds unsupported transactions and drafts a client-ready open-items / PBC request list. No writes.
+- **`quanto-firm-digest`** — the one firm-scoped skill: cross-client morning triage that sweeps every client and ranks where attention is needed today. Read-only; deliberately overrides the single-active-client rule to route you to the right client + skill.
 
 ### Tier 3 — specialized
 - **`quanto-year-end-1099-prep`** — vendor 1099 audit: payment totals, missing TINs, classification.

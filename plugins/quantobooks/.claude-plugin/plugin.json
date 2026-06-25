@@ -1,6 +1,6 @@
 {
   "name": "quantobooks",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "QuantoBooks accounting skills for Claude — month-end close, flag triage, balance sheet review, AR/AP, 1099 prep, and more.",
   "author": {
     "name": "Quanto Technology Labs",
