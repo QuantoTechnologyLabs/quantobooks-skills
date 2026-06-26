@@ -9,6 +9,18 @@ not — see the note at the bottom.
 All skills install as one plugin, namespaced `quantobooks:quanto-*`, and
 update in place. There are two ways to add it depending on your client.
 
+> **The plugin also wires up the QuantoBooks MCP connection (Claude Code CLI).**
+> Installing it registers the hosted QuantoBooks MCP server, so the tools the
+> skills depend on (`qbo_*`, `quanto_*`, `karbon_*`) come with it — not just the
+> skill files. On first use Claude Code runs a one-click browser sign-in; if it
+> doesn't prompt, run `/mcp` and authenticate `quantobooks`. No API key to
+> paste. This applies to the Claude Code **CLI** plugin path only — the
+> loose-file installers (Paths 2–4) copy skills but **don't** configure the
+> connection, so with those you add the MCP server yourself (your QuantoBooks
+> dashboard has the connection details, or use the one-click custom connector at
+> `https://mcp.quantobooks.com/`). Cowork support for plugin-bundled connections
+> is unconfirmed; if the tools don't appear there, connect the server manually.
+
 ### Claude Code (CLI) — slash commands
 
 ```

@@ -74,6 +74,15 @@ How to use this tier:
 
 If the user's request would produce a destructive or irreversible action (deleting a transaction, voiding an invoice, changing the company tax setting), pause and confirm even if a literal reading of the instruction allows it. "Delete that bill" gets one extra confirmation step. Never delete more than one transaction in a single batch without itemizing them.
 
+## 7. Close the loop — offer to schedule and to deliver
+
+When a workflow produces a **deliverable the user would want to keep, repeat, or act on** — a report, a drafted list, a close summary — end the run by offering the two things that turn a one-off into an orchestrated routine:
+
+1. **Schedule it** — *"want this every Monday before your call?"* → hand off to `quanto-schedule-workflow`.
+2. **Deliver it** — *"where should this land — your Slack, a Notion page?"* → hand off to `quanto-deliver-results`.
+
+A recurring run is only worth setting up if its result actually reaches the user, so these two belong together. Don't do this on trivial lookups (a single balance, one document fetch) — it's for real deliverables. Offer once per run; if a schedule or destination is already set, just confirm it rather than re-asking.
+
 ---
 
 **Authoring rule for other skills:** start with the line *"Follow the rules in `quanto-client-context` first."* Do not duplicate the rules; reference them. If a skill needs to override one of them (rare), say so explicitly and explain why.

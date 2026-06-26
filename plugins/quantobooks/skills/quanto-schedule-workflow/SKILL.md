@@ -15,7 +15,7 @@ Read these before creating anything. They are not optional.
 
 ### 1. A scheduled run is UNATTENDED → review-only
 
-When the routine fires, **no human is in the chat to approve a write.** So a scheduled QuantoBooks run must never perform a `qbo_*_create` / `_update` / `_delete`, apply a payment, post a JE, or send anything. It **prepares and summarizes** so the user has the work waiting for them when they sit down — it does not execute it.
+When the routine fires, **no human is in the chat to approve a write.** So a scheduled QuantoBooks run must never perform a `qbo_*_create` / `_update` / `_delete`, apply a payment, post a JE, or send anything **to the client**. It **prepares and summarizes** so the user has the work waiting for them when they sit down — it does not execute it. It *may* deliver its read-only summary to an **internal firm destination** (the firm's own Slack or Notion) — that's what makes a scheduled run worth setting up — by handing off to `quanto-deliver-results`, which holds the internal-vs-client-facing line.
 
 Every schedule you create must bake this in: the scheduled prompt explicitly says *"review-only: do not perform any write operations; draft and summarize for my approval."* If the user asks for a schedule that auto-posts or auto-pays, decline and explain — that's a human-in-the-loop action by design (see `quanto-client-context`).
 
@@ -35,6 +35,7 @@ Collect, and read back before creating:
 2. **Client** — the exact active client. You **must** capture its `client_id` (and realm), not just a display name — call `get_active_client_info` / `list_clients` to pin it. The scheduled run will `switch_client` to this id first.
 3. **Cadence — the user's choice, always.** Ask for the interval, day(s), time, and timezone. The user can pick anything the host scheduler supports: weekly, every two weeks, monthly, twice a month, specific weekdays, "the 3rd business day," etc. Suggest a sensible default for the workflow (AR/pay-run/cleanup → weekly; close/BS/management report → monthly) but make clear it's just a starting point — *"Weekly on Mondays at 8am, or did you want a different day/frequency?"* Whatever they say wins. Don't hard-code the default; confirm the actual cadence back before creating.
 4. **What 'done' looks like** — what the user wants waiting for them: a drafted AR follow-up list, a flagged-items summary, a close-readiness report.
+5. **Delivery destination** — where the result lands when it fires (an internal Slack channel, a Notion page). A scheduled run no one sees is wasted, so capture this now and bake it in. Inherit the firm/client default from onboarding if one is set; hand the specifics to `quanto-deliver-results`.
 
 ### Step 2 — State the safety posture
 
@@ -51,9 +52,10 @@ Run the QuantoBooks {{WORKFLOW}} workflow for client {{CLIENT_NAME}} (client_id 
 2. Run the workflow in REVIEW-ONLY mode: prepare, draft, and summarize. Do NOT perform any
    create/update/delete, do not apply payments, do not send messages.
 3. End with a short summary I can act on when I'm back: what you found, what you drafted, what needs my decision.
+4. Deliver that summary to {{DESTINATION}} (an internal firm destination only — never the client). If {{DESTINATION}} isn't reachable, leave the summary in the run output and note it wasn't delivered.
 ```
 
-Fill `{{WORKFLOW}}`, `{{CLIENT_NAME}}`, `{{CLIENT_ID}}`. Keep it tight.
+Fill `{{WORKFLOW}}`, `{{CLIENT_NAME}}`, `{{CLIENT_ID}}`, `{{DESTINATION}}`. Keep it tight.
 
 ### Step 4 — Create the schedule
 
@@ -98,4 +100,4 @@ One change at a time, per client. Don't bulk-reschedule multiple clients in one 
 
 ## Relationship to other skills
 
-The cadence-appropriate workflows end by offering to schedule themselves — that hands off to this skill. Today those are `quanto-ar-followup`, `quanto-flag-triage`, `quanto-ap-pay-run`, `quanto-transaction-cleanup` (weekly/ongoing), and `quanto-month-end-close`, `quanto-balance-sheet-review`, `quanto-management-report` (monthly). `quanto-client-briefing` (timed to a standing client call, whatever its cadence) leans on this skill the hardest — being strictly read-only, it re-offers the schedule on every manual run until one is pinned, since a pre-call brief is only useful if it reliably runs before the call. The read-only monitors — `quanto-cash-flow-watch` (weekly), `quanto-spend-watch` and `quanto-missing-docs-chase` (per close / weekly) — are built to be scheduled and offer it too. `quanto-firm-digest` is the one exception to per-client pinning: it schedules a **firm-level** run (across all clients), not a single `client_id`, set up in the firm/home context rather than a client project. The one-off skills (onboarding review, catch-up bookkeeping, JE assist, document lookup) don't — they're not recurring. This skill only sets up the recurrence; the actual work is whatever workflow it points at, running review-only.
+The cadence-appropriate workflows end by offering to schedule themselves — that hands off to this skill. Today those are `quanto-ar-followup`, `quanto-flag-triage`, `quanto-ap-pay-run`, `quanto-transaction-cleanup` (weekly/ongoing), and `quanto-month-end-close`, `quanto-balance-sheet-review`, `quanto-management-report` (monthly). `quanto-client-briefing` (timed to a standing client call, whatever its cadence) leans on this skill the hardest — being strictly read-only, it re-offers the schedule on every manual run until one is pinned, since a pre-call brief is only useful if it reliably runs before the call. The read-only monitors — `quanto-cash-flow-watch` (weekly), `quanto-spend-watch` and `quanto-missing-docs-chase` (per close / weekly) — are built to be scheduled and offer it too. `quanto-firm-digest` is the one exception to per-client pinning: it schedules a **firm-level** run (across all clients), not a single `client_id`, set up in the firm/home context rather than a client project. The one-off skills (onboarding review, catch-up bookkeeping, JE assist, document lookup) don't — they're not recurring. This skill only sets up the recurrence; the actual work is whatever workflow it points at, running review-only. Where that run's output lands is owned by `quanto-deliver-results` — a schedule pins a destination, and the run hands off there to deliver its summary to the firm internally.
