@@ -15,7 +15,7 @@ Say this plainly early on, because everything else follows from it:
 
 - **One project per client.** A firm keeps a Cowork (or Claude Code) project for each managed client and does that client's books inside it. The project *is* the client's workspace — schedules, briefings, and delivery all pin to it. (This is the same model `quanto-client-context` assumes.)
 - **One firm / home context for cross-client work.** The firm-wide morning triage (`quanto-firm-digest`) and this onboarding guide live here, not in any single client project.
-- **Read-and-summarize automation, human-in-the-loop on writes.** Recurring runs prepare work for review; a person approves anything that writes to the books, pays, or goes to the client (`quanto-schedule-workflow` safety posture).
+- **Read-and-summarize automation, human-in-the-loop on writes.** Recurring runs prepare work for review; a person approves anything that writes to the books, pays, or goes to the client (`quanto-schedule-workflow` safety posture). These runs live on the sandbox's **local scheduler** and re-arm themselves on each fire, so they survive CronCreate's 7-day cap — `quanto-schedule-workflow` owns the mechanism; managed/cloud routines are only a fallback.
 
 ## Keep a setup checklist (this is how it stays stateful)
 
@@ -32,6 +32,7 @@ Format it so a human can read it at a glance:
 ## Firm defaults
 - Delivery destinations: [e.g. Slack #client-ops for internal · Notion "Client Reports" DB]
 - Default cadences: briefing weekly (before the standing call) · flag-triage weekly · close monthly
+- Scheduler: local cron, self-rearming (fallback: host routine)
 - Headless / scheduled-run auth: [confirmed | not yet confirmed]
 - Firm digest schedule: [daily 7:00 ET | not yet]
 
@@ -64,7 +65,7 @@ These get inherited by every per-client setup, so capture them here instead of r
 
 - **Delivery destinations.** Where should results land? This is the question that makes automation worth it — a report nobody sees is wasted effort. Ask which of the firm's tools they want output in: **Slack** (which workspace / channel convention), **Notion** (which space or database), or email. If none is connected to the host yet, name the options and nudge them to connect one — hand the specifics to `quanto-deliver-results`.
 - **Default cadences.** Sensible starting points per workflow (briefing weekly before the call; flag-triage weekly; close monthly). The user can override per client later.
-- **Headless auth.** Scheduled runs are unattended and need the QuantoBooks connector authenticated non-interactively (an API key, not interactive sign-in). Flag this now; the first scheduled run is the real test (see `quanto-schedule-workflow`).
+- **Headless auth.** Scheduled runs are unattended and need the QuantoBooks connector authenticated non-interactively (an API key, not interactive sign-in). Flag this now; the first scheduled run is the real test (see `quanto-schedule-workflow`). Scheduling itself runs on the sandbox's **local cron** as a self-rearming chain (preferred over Claude-managed routines, resilient to the 7-day cron cap) — `quanto-schedule-workflow` owns it.
 
 Record all of it in the checklist's Firm defaults block.
 

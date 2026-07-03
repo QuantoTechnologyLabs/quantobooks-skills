@@ -1,6 +1,6 @@
 ---
 name: quanto-schedule-workflow
-description: Set up, change, or cancel a recurring run of a QuantoBooks workflow for a specific client — e.g. "run AR follow-up for Acme every Monday at 8am", "review Client B's books each Wednesday", "make Acme's close weekly instead of monthly", "move the pay-run reminder to Fridays", "stop scheduling the AR for Beta". Pins the client, schedules an unattended review-only run via the host's scheduler at whatever cadence the user wants, and can edit or remove an existing one. Trigger phrases — "schedule this", "run this every [day]", "make it weekly/monthly", "change the cadence", "reschedule [workflow] for [client]", "pause/stop/cancel the [workflow] schedule", "automate the [AR/close/triage] for [client]".
+description: Set up, change, or cancel a recurring run of a QuantoBooks workflow for a specific client — e.g. "run AR follow-up for Acme every Monday at 8am", "review Client B's books each Wednesday", "make Acme's close weekly instead of monthly", "move the pay-run reminder to Fridays", "stop scheduling the AR for Beta". Pins the client, schedules an unattended review-only run on the sandbox's self-rearming local cron at whatever cadence the user wants, and can edit or remove an existing one. Trigger phrases — "schedule this", "run this every [day]", "make it weekly/monthly", "change the cadence", "reschedule [workflow] for [client]", "pause/stop/cancel the [workflow] schedule", "automate the [AR/close/triage] for [client]".
 ---
 
 # Schedule a QuantoBooks Workflow
@@ -8,6 +8,14 @@ description: Set up, change, or cancel a recurring run of a QuantoBooks workflow
 Follow the rules in `quanto-client-context` first — a schedule is only as good as the client it's pinned to.
 
 This skill turns a one-off workflow into a recurring routine for one client. It fits the project-per-client journey: a firm running Client A's AR every Monday before a Monday-afternoon meeting, and Client B's every Wednesday. Other QuantoBooks skills offer to invoke this at the end of a run ("want me to do this every week?").
+
+## Where scheduling runs — local cron first
+
+QuantoBooks is built to run in an **always-on cloud sandbox** (Docker + tmux) where the Claude session stays alive around the clock. In that environment, **prefer the local in-session scheduler (`CronCreate`) over a Claude-managed / cloud routine.** Local cron keeps the whole loop — fire → run → deliver → re-arm — inside the one place the QuantoBooks connector is already authenticated, with no dependency on an external routine runner, and it fires whenever the session is idle.
+
+**One hard constraint shapes everything below:** `CronCreate` jobs **auto-expire 7 days after creation** — a recurring job fires once at the 7-day boundary and is then deleted. So a plain recurring local cron can't sustain a weekly cadence, and can't fire a monthly one at all (it dies before the first run). The fix, used by every schedule this skill creates: **a self-rearming chain of one-shot jobs.** Each fire re-arms the next one, and no single job is ever scheduled more than ~6 days out, so the chain never hits the 7-day death and runs indefinitely. Create jobs with `durable: true` so they survive a sandbox restart.
+
+Managed / host routines (Cowork scheduled tasks, Claude Code `/schedule`) are the **fallback** — for ephemeral sessions, or when the user explicitly wants a cloud-managed routine. They have no 7-day cap, so a normal recurring schedule is fine there. Details in Step 4.
 
 ## The two things that make scheduling safe
 
@@ -33,7 +41,7 @@ The routine runs headless. It can only reach the QuantoBooks MCP if that connect
 Collect, and read back before creating:
 1. **Workflow** — which skill (e.g. `quanto-ar-followup`, `quanto-month-end-close`, `quanto-flag-triage`).
 2. **Client** — the exact active client. You **must** capture its `client_id` (and realm), not just a display name — call `get_active_client_info` / `list_clients` to pin it. The scheduled run will `switch_client` to this id first.
-3. **Cadence — the user's choice, always.** Ask for the interval, day(s), time, and timezone. The user can pick anything the host scheduler supports: weekly, every two weeks, monthly, twice a month, specific weekdays, "the 3rd business day," etc. Suggest a sensible default for the workflow (AR/pay-run/cleanup → weekly; close/BS/management report → monthly) but make clear it's just a starting point — *"Weekly on Mondays at 8am, or did you want a different day/frequency?"* Whatever they say wins. Don't hard-code the default; confirm the actual cadence back before creating.
+3. **Cadence — the user's choice, always.** Ask for the interval, day(s), time, and timezone. The user can pick any cadence — weekly, every two weeks, monthly, twice a month, specific weekdays, "the 3rd business day," etc. (the self-rearming chain handles arbitrary cadences, including ones longer than the 7-day cron cap). Suggest a sensible default for the workflow (AR/pay-run/cleanup → weekly; close/BS/management report → monthly) but make clear it's just a starting point — *"Weekly on Mondays at 8am, or did you want a different day/frequency?"* Whatever they say wins. Don't hard-code the default; confirm the actual cadence back before creating.
 4. **What 'done' looks like** — what the user wants waiting for them: a drafted AR follow-up list, a flagged-items summary, a close-readiness report.
 5. **Delivery destination** — where the result lands when it fires (an internal Slack channel, a Notion page). A scheduled run no one sees is wasted, so capture this now and bake it in. Inherit the firm/client default from onboarding if one is set; hand the specifics to `quanto-deliver-results`.
 
@@ -43,33 +51,49 @@ Tell the user, in one line, what the scheduled run will and won't do: *"Every Mo
 
 ### Step 3 — Compose the scheduled prompt
 
-Build a self-contained instruction the routine will run. It must stand alone (the routine has none of this conversation's context):
+Build a self-contained instruction the run will execute. It must stand alone (the run has none of this conversation's context) **and re-arm its own successor** — that's what beats the 7-day cron cap:
 
 ```
-Run the QuantoBooks {{WORKFLOW}} workflow for client {{CLIENT_NAME}} (client_id {{CLIENT_ID}}).
-1. switch_client to {{CLIENT_ID}} and confirm the active client is {{CLIENT_NAME}} before anything else.
-   If the client can't be activated or the QuantoBooks connector isn't authenticated, stop and report that — do not proceed against the wrong books.
-2. Run the workflow in REVIEW-ONLY mode: prepare, draft, and summarize. Do NOT perform any
-   create/update/delete, do not apply payments, do not send messages.
-3. End with a short summary I can act on when I'm back: what you found, what you drafted, what needs my decision.
-4. Deliver that summary to {{DESTINATION}} (an internal firm destination only — never the client). If {{DESTINATION}} isn't reachable, leave the summary in the run output and note it wasn't delivered.
+# quanto-schedule: {{WORKFLOW}} · client {{CLIENT_ID}} · cadence {{CADENCE}}
+You are an unattended, scheduled QuantoBooks run in an always-on sandbox. No human is watching.
+The next real {{CADENCE}} run is due at {{NEXT_TARGET}} ({{TZ}}).
+
+1. Run-or-hop: if the current time is at/after {{NEXT_TARGET}} (within ~1h), this is a REAL run — continue.
+   If {{NEXT_TARGET}} is still in the future, this fire is only a keep-alive hop to beat CronCreate's
+   7-day expiry — skip to step 5 and just re-arm; do NOT run the workflow.
+2. switch_client to {{CLIENT_ID}} and confirm the active client is {{CLIENT_NAME}}. If it can't be
+   activated or the QuantoBooks connector isn't authenticated, report that and skip to step 5 (still
+   re-arm) — never run against the wrong books.
+3. Run the QuantoBooks {{WORKFLOW}} workflow in REVIEW-ONLY mode: prepare, draft, summarize. Do NOT
+   create/update/delete, apply payments, post JEs, or send anything to the client. End with a short
+   summary I can act on: what you found, what you drafted, what needs my decision.
+4. Deliver that summary to {{DESTINATION}} (internal firm destination only — never the client) per
+   quanto-deliver-results. If unreachable, keep it in the run output and note it wasn't delivered.
+5. RE-ARM THE NEXT RUN — do this on EVERY fire, whether it ran (step 3) or just hopped (step 1):
+   - If step 3 ran, advance {{NEXT_TARGET}} to the next {{CADENCE}} occurrence; otherwise keep it.
+   - FIRE_AT = min(updated {{NEXT_TARGET}}, now + 6 days)   ← never schedule past the 7-day cap.
+   - CronCreate a ONE-SHOT (recurring:false, durable:true) at FIRE_AT carrying THIS WHOLE PROMPT with
+     {{NEXT_TARGET}} updated. Arm exactly one successor; if CronList shows duplicates for this marker
+     line, CronDelete the extras.
 ```
 
-Fill `{{WORKFLOW}}`, `{{CLIENT_NAME}}`, `{{CLIENT_ID}}`, `{{DESTINATION}}`. Keep it tight.
+Fill `{{WORKFLOW}}`, `{{CLIENT_NAME}}`, `{{CLIENT_ID}}`, `{{CADENCE}}`, `{{NEXT_TARGET}}`, `{{TZ}}`, `{{DESTINATION}}`. The `# quanto-schedule:` marker line is how you find this job again in `CronList`. Keep it tight — but keep step 5 verbatim; the chain dies without it.
 
-### Step 4 — Create the schedule
+### Step 4 — Create the schedule (local cron, self-rearming)
 
-Use the **host's scheduling capability** — whatever the current client exposes:
-- In **Cowork**, create a scheduled task with the prompt + cadence.
-- In **Claude Code**, use the scheduling/routine mechanism (`/schedule`) to create a cron routine with the prompt.
+**Default — local in-session cron (`CronCreate`).** Per "Where scheduling runs," this is the preferred path in the always-on sandbox. Create only the FIRST hop; the prompt re-arms the rest:
+- Compute `NEXT_TARGET` (the first real run time, in the user's timezone) and `FIRE_AT = min(NEXT_TARGET, now + 6 days)`.
+- `CronCreate({ cron: "<FIRE_AT as a 5-field cron>", recurring: false, durable: true, prompt: "<the Step-3 self-perpetuating prompt>" })`.
+- `recurring: false` — it's a one-shot; the *chain*, not a standing job, is the recurrence. `durable: true` persists it to `.claude/scheduled_tasks.json` so it survives a sandbox restart.
+- Do **not** create a recurring `CronCreate` for a weekly-or-longer cadence — it expires in 7 days (and never fires at all for monthly). The self-rearming chain is the only correct shape.
 
-If the host has **no** scheduler available, don't fake it — tell the user, and offer the fallback: you'll remind them (or they re-run it) at the chosen time. Don't claim a recurring job exists if you didn't create one.
+**Fallback — managed / host scheduler.** Only when there's no persistent local session (e.g. an ephemeral Cowork desktop) or the user explicitly asks for a cloud-managed routine: use the host's scheduler — a Cowork scheduled task, or a Claude Code `/schedule` routine. These have no 7-day cap, so a normal recurring schedule works; tell the user you used the managed scheduler rather than local cron. If neither a local session nor a host scheduler is available, don't fake it — offer to remind them (or have them re-run) at the chosen time, and don't claim a recurring job exists.
 
 ### Step 5 — Confirm + hand off
 
 Report back:
-- **What was created** — workflow, client, cadence, next run time (with timezone).
-- **Where to manage it** — how to edit or cancel (the host's schedule/routine list).
+- **What was created** — workflow, client, cadence, next run time (with timezone), and that it **re-arms itself each fire** (local cron) so it keeps running past the 7-day cron cap.
+- **Where to manage it** — `CronList` shows the pending job (find it by the `# quanto-schedule: …` marker); `CronDelete <id>` cancels it. For the managed-scheduler fallback, point at the host's schedule/routine list instead.
 - **The first-run caveat** — *"I'll know the scheduled run can reach Acme's books after the first fire; if it errors on auth, we'll need an API key on the connector."*
 
 ### Step 6 — Per-client, not global
@@ -80,11 +104,11 @@ One schedule pins one client. For a firm running several clients on different da
 
 Cadence isn't locked in — a user who set up a monthly close can switch it to weekly, move the day/time, pause it, or remove it entirely. When they ask ("make Acme's AR weekly", "move the close to the 1st", "pause Beta's pay-run schedule", "stop scheduling X"):
 
-1. **Find it.** List the host's existing scheduled tasks/routines and identify the one for this workflow + client. If several could match, show them and ask which. If you can't find a matching schedule, say so — don't create a new one unless the user wants that.
-2. **Apply the change** using the host's update capability:
-   - **Change cadence / day / time** → update the existing routine's schedule (or, if the host can't edit in place, delete it and recreate with the same pinned-client prompt at the new cadence — tell the user that's what you did).
-   - **Pause** → disable the routine if the host supports it; otherwise delete it and offer to recreate when they're ready.
-   - **Cancel/stop** → delete the routine.
+1. **Find it.** Run `CronList` and identify the job by its `# quanto-schedule: {{WORKFLOW}} · client {{CLIENT_ID}}` marker (for the managed fallback, list the host's scheduled tasks/routines instead). If several could match, show them and ask which. If you can't find one, say so — don't create a new one unless the user wants that.
+2. **Apply the change:**
+   - **Change cadence / day / time** → `CronDelete` the current job and create a fresh first hop (Step 4) with the new `{{CADENCE}}` / `{{NEXT_TARGET}}` and the same pinned-client prompt. A local chain can't be edited in place — you replace it; tell the user that's what you did.
+   - **Pause** → `CronDelete` the job and offer to recreate when they're ready (a one-shot chain has nothing to "disable" — removing the pending hop stops it).
+   - **Cancel/stop** → `CronDelete` the job. Because the chain only persists by re-arming, deleting the pending hop ends it permanently.
 3. **Don't touch the safety posture.** Editing cadence never changes review-only — the run stays prepare-and-summarize regardless of frequency.
 4. **Confirm the new state** — *"Acme's AR follow-up now runs **weekly on Mondays 8am** instead of monthly; next run is [date]."* Or, for cancel — *"Removed Beta's pay-run schedule; nothing will run automatically now."*
 
@@ -93,8 +117,10 @@ One change at a time, per client. Don't bulk-reschedule multiple clients in one 
 ## Things to NEVER do
 
 - Never schedule a workflow that writes/sends unattended. Review-only, always.
-- Never pin a schedule by client *name* alone — always the `client_id`, or the routine may hit the wrong books if names are similar or the default client changes.
-- Never claim a recurring job was created if the host has no scheduler — offer a reminder instead.
+- Never use a plain **recurring** `CronCreate` for a weekly-or-longer cadence — it auto-expires after 7 days (and a monthly one never fires at all). Always use the self-rearming one-shot chain.
+- Never let a scheduled run finish without re-arming the next hop — the chain dies the moment one fire skips step 5.
+- Never pin a schedule by client *name* alone — always the `client_id`, or the run may hit the wrong books if names are similar or the default client changes.
+- Never claim a recurring job was created if you couldn't create one (no local session and no host scheduler) — offer a reminder instead.
 - Never promise the scheduled run will authenticate if you couldn't confirm the connector's headless auth — flag the first run as the test.
 - Never bundle multiple clients into one schedule.
 
