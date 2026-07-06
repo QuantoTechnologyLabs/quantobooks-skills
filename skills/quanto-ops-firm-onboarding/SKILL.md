@@ -9,6 +9,8 @@ This is the **getting-started guide for a whole firm** adopting QuantoBooks. Run
 
 It operates at **firm scope**. It doesn't pull any one client's books — that's what `quanto-ops-client-onboarding` does, per client, in that client's project. Anything here that does touch a specific client still follows `quanto-client-context`.
 
+> **Prerequisite:** the plugin must be installed and the QuantoBooks data connection authenticated first — that's `quanto-ops-setup` (which runs `quanto-ops-connect`). If the connector isn't live yet, start there; this guide assumes the tools already work.
+
 ## The operating model you're teaching
 
 Say this plainly early on, because everything else follows from it:
