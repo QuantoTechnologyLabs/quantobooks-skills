@@ -11,7 +11,13 @@ Every other QuantoBooks skill begins by following the rules below. They are not 
 
 **The intended setup is one project per managed client** — a firm keeps a Cowork/Claude Code project per client and works that client's books inside it. Use that: the project you're in is a strong signal for *which* client, but never a silent substitute for confirming it.
 
-On the first tool call of a QuantoBooks workflow, resolve the client in this order:
+**Pinned projects short-circuit this.** If `.claude/quanto-client.json` exists
+in the project folder, this project is pinned to that client: `switch_client`
+to it immediately, echo it, and proceed — the plugin's session-guard hooks
+block data tools until you do, and block switching to any other client. If the
+user asks for a *different* client while pinned, don't fight the guard: point
+them to that client's own project, or walk them through repinning via
+`quanto-project-pin`. In unpinned projects, resolve the client in this order:
 
 1. **Did the user name a client?** If the message names one (or hints at one — *"the dental practice"*, *"my Stripe client"*), that wins. Call `list_clients`, find the match, `switch_client` if it isn't already active. If the hint is ambiguous or matches several, list the candidates and ask.
 2. **No client named → infer from the project, then confirm.** Call `list_clients` and compare the **current project / workspace name** against the client names. If one client clearly matches the project name (exact or obvious — "Acme Corp" project ↔ "Acme Corp" client), propose it and switch: *"This looks like the **Acme Corp** project — working on Acme Corp's books. Say the word if that's wrong."* This is a confirm-and-proceed, not a silent assumption — you've told the user which books you're about to touch and given them a one-word veto.
@@ -21,6 +27,12 @@ On the first tool call of a QuantoBooks workflow, resolve the client in this ord
 Matching rules: an exact or near-exact project↔client name match is enough to propose-and-confirm. A weak/partial match (one shared word, a guess) is NOT — fall through to asking. When two clients could both match, always ask. The cost of touching the wrong client's books is far higher than one clarifying question.
 
 After any `switch_client`, re-echo the new active client before proceeding.
+
+Two server behaviors back this up (MCP server 0.2+): sessions for multi-client
+firms start with **no active client** — data tools error until you
+`switch_client` — and every tool response ends with an `[active_client: …]`
+line. Read that line; if it ever names a client other than the one you intend,
+stop and re-resolve before acting on the result.
 
 ## 2. Pick the right tool tier
 

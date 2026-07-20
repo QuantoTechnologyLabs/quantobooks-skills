@@ -21,6 +21,8 @@ By the end, this client has: (1) the project confirmed as its workspace, (2) a d
 
 Per `quanto-client-context`, confirm the active client and tie it to this project. If the project name matches a client, propose-and-confirm and `switch_client`; otherwise ask. Echo it: *"This is the **Acme Corp** project — setting Acme up as its workspace."*
 
+Then make the anchor permanent: run **`quanto-project-pin`** to write the project's client pin (`.claude/quanto-client.json`). From then on the plugin's session guard blocks this project's data tools until the pinned client is active and blocks switching to any other client — the wrong-client-after-project-switch mistake can't happen here again.
+
 If a `quanto-firm-setup.md` checklist exists (from the firm onboarding), read this client's row so you inherit the firm defaults (delivery, cadences) and don't re-ask what's already decided.
 
 ### Step 2 — Run discovery
