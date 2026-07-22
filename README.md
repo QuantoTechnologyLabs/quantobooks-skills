@@ -35,6 +35,7 @@ Skills encode that. Each one:
 - **`quanto-vendor-cleanup`** — duplicate vendors, missing TIN/W9, inconsistent naming.
 - **`quanto-management-report`** — monthly client-facing narrative: P&L, BS, ratios, deltas, 3–5 talking points. No writes.
 - **`quanto-client-briefing`** — internal pre-call brief: fans across QBO movement, Quanto flags, Karbon work items / notes, and recent documents over a "since last call" window into a one-page "what changed / what to raise / what they'll ask". Read-only; re-offers to schedule itself before every standing call.
+- **`quanto-amazon-reconciliation`** — pulls Amazon (Business or personal) purchases for a period via the user's live browser session (Claude for Chrome / browser MCP; CSV export fallback), matches them against QBO transactions, renders a tie-out reconciliation report, and posts the approved missing transactions with charge-level (order ID + date + amount) idempotency keys. Hard human gate before any write.
 
 ### Monitors — read-only recurring watches (built to schedule)
 - **`quanto-cash-flow-watch`** — weekly cash position, net burn/build, expected AR-in vs AP-out, and a directional runway estimate. No writes.

@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "QuantoBooks accounting skills for Claude — install all QuantoBooks workflows as one plugin.",
-    "version": "0.12.0"
+    "version": "0.13.0"
   },
   "plugins": [
     {
       "name": "quantobooks",
       "source": "./plugins/quantobooks",
       "description": "QuantoBooks accounting skills for Claude — month-end close, flag triage, balance sheet review, AR/AP, 1099 prep, and more, against your QuickBooks data via the QuantoBooks MCP server.",
-      "version": "0.12.0"
+      "version": "0.13.0"
     }
   ]
 }
