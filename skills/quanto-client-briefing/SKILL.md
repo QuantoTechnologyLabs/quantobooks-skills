@@ -7,7 +7,7 @@ description: Generate an internal pre-call briefing for the active QuantoBooks c
 
 Follow the rules in `quanto-client-context` first — a briefing pinned to the wrong client is worse than no briefing.
 
-This skill is the read-only mirror of `quanto-management-report`, but **internal-facing**. Management report is what the firm *sends the client*; this is what the firm_user *reads before talking to the client*. Its job is to fan across every integration Quanto can see — QBO movement, Quanto's review flags, Karbon practice-management context, and recent documents — and synthesize a single page: **what changed since the last conversation, what to raise, and what to ask.**
+This skill is the read-only mirror of `quanto-management-report`, but **internal-facing**. Management report is what the firm *sends the client*; this is what the firm_user *reads before talking to the client*. Its job is to fan across every integration Quanto can see — QBO movement, Quanto's review flags, Karbon practice-management context, Notion pages & meeting notes, and recent documents — and synthesize a single page: **what changed since the last conversation, what to raise, and what to ask.**
 
 It fits the project-per-client setup directly: one client, one project, a standing call, and this skill run just before it. Because a recurring client call is the canonical looping workflow, this skill leans into the recurrence harder than any other — see Step 8.
 
@@ -53,7 +53,9 @@ This tier is **context, never authority** (per `quanto-client-context`) — it c
 
 ### Step 5 — What's new in the knowledge base
 
-Run `quanto_knowledge_base_search` to catch anything that landed since the last call that the steps above wouldn't surface — a new statement, contract, or document the client sent, or a firm SOP that bears on this engagement. Search first (it spans uploaded docs, Google Drive, firm SOPs, and Karbon in one call), then drill into anything relevant with `quanto_document_get` / `quanto_firm_document_get` / `karbon_*_get` using the `document_id` on each hit. Note genuinely new or changed items; don't re-list documents that were already there last time.
+Run `quanto_knowledge_base_search` to catch anything that landed since the last call that the steps above wouldn't surface — a new statement, contract, or document the client sent, or a firm SOP that bears on this engagement. Search first (it spans uploaded docs, Google Drive, firm SOPs, Karbon, and Notion in one call), then drill into anything relevant with `quanto_document_get` / `quanto_firm_document_get` / `karbon_*_get` / `notion_page_get` using the `document_id` on each hit. Note genuinely new or changed items; don't re-list documents that were already there last time.
+
+**Prior meeting notes are the single best "since we last spoke" source.** When the firm keeps meeting notes in Notion, pull the most recent ones for this client — `notion_page_query` with `kind: "meeting_note"` (or `quanto_knowledge_base_search` with `doc_types: ["notion_meeting_note"]` and a `dateFrom` filter) — and mine them for commitments made last time ("we said we'd fix X by Y"): those become the top of the *what to raise* list.
 
 ### Step 6 — Synthesize the briefing
 

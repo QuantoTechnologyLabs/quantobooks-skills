@@ -1,6 +1,6 @@
 ---
 name: quanto-document-lookup
-description: Find and read anything in the client's knowledge base — receipts, statements, invoices, contracts, firm SOPs, and Karbon notes. Trigger phrases — "find the receipt for [X]", "what document supports [Y]", "look up the statement for [Z]", "where's the bill from [vendor]", "what do we know about [client]".
+description: Find and read anything in the client's knowledge base — receipts, statements, invoices, contracts, firm SOPs, Karbon notes, and Notion pages & meeting notes. Trigger phrases — "find the receipt for [X]", "what document supports [Y]", "look up the statement for [Z]", "where's the bill from [vendor]", "what do we know about [client]", "what did we discuss with [client]".
 ---
 
 # Document Lookup
@@ -11,8 +11,8 @@ A thin but high-value wrapper around Quanto's knowledge base. Users want to find
 
 **The flow is always the same: search first, then drill in.**
 
-1. **Search** by meaning with `quanto_knowledge_base_search`. One call covers everything ingested for the client — uploaded documents, Google Drive files, firm-wide SOPs, and Karbon notes/work items/profiles — across both client and firm scope. This is the front door for essentially every request, *including* "what do we know about this client" questions. Don't start by guessing file names.
-2. **Drill in** using the metadata on each hit. Every result carries the `document_id` (and `chunk_index`) of the chunk that matched, so when the user wants more than the snippet you fetch the full document it came from with `quanto_document_get` / `quanto_firm_document_get` / `karbon_*_get`.
+1. **Search** by meaning with `quanto_knowledge_base_search`. One call covers everything ingested for the client — uploaded documents, Google Drive files, firm-wide SOPs, Karbon notes/work items/profiles, and Notion pages including auto-detected meeting notes — across both client and firm scope. This is the front door for essentially every request, *including* "what do we know about this client" and "what did we discuss with them" questions. Don't start by guessing file names.
+2. **Drill in** using the metadata on each hit. Every result carries the `document_id` (and `chunk_index`) of the chunk that matched, so when the user wants more than the snippet you fetch the full document it came from with `quanto_document_get` / `quanto_firm_document_get` / `karbon_*_get` / `notion_page_get`.
 
 `quanto_document_query` is the *secondary* tool — for browsing by name/category or confirming what's ingested — not the place to start.
 
@@ -35,9 +35,9 @@ Scope defaults to the active client, and firm-wide SOPs are always included. Onl
 Each result is the chunk that matched, with:
 
 - **`content`** — the snippet itself. Often this already answers the question; lead with the best one or two.
-- **`doc_type`** — `sop` (client document), `firm_sop` (firm-wide standard), or `karbon_*` (practice-management).
-- **`source`** — `upload` or `google_drive`.
-- **`document_id`** (sop / firm_sop) or **`external_id`** (karbon) — the handle for Step 3.
+- **`doc_type`** — `sop` (client document), `firm_sop` (firm-wide standard), `karbon_*` (practice-management), `notion_page` (Notion workspace page), or `notion_meeting_note` (auto-detected meeting note — client-mapped or firm-wide; pass `doc_types: ["notion_meeting_note"]` to search just meetings).
+- **`source`** — `upload`, `google_drive`, or `notion`.
+- **`document_id`** (sop / firm_sop / notion_*) or **`external_id`**/**`notion_id`** (karbon / notion) — the handle for Step 3.
 - **`chunk_index`** and **`score`** — where in the document the snippet came from, and how strong the match is.
 
 Present the snippet(s) with the source document name. If the snippet fully answers the question, you're done — no need to fetch the whole file.
@@ -51,6 +51,8 @@ When the user wants more than the snippet (the full statement, every line item, 
 | `sop` | `quanto_document_get(document_id)` |
 | `firm_sop` | `quanto_firm_document_get(document_id)` |
 | `karbon_note` / `karbon_work_item` / `karbon_note_comment` / `karbon_client_profile` | the matching `karbon_*_get` with the payload `external_id` |
+| `notion_page` | `notion_page_get(notion_id)` |
+| `notion_meeting_note` | `notion_page_get(notion_id)` when the hit has a `firm_client_id`; `quanto_firm_document_get(document_id)` when it's firm-wide (no `firm_client_id`) |
 
 Pass `include_chunks` if you want the ordered chunks; `chunk_index` tells you which part the match came from. Then present:
 
@@ -69,7 +71,7 @@ If it doesn't match anything, note that — it might mean the document was forwa
 
 ## Browsing by name, or when search comes up empty
 
-`quanto_document_query` (client) and `quanto_firm_document_query` (firm) are for *enumerating*, not searching content — use them when the user names a specific file or wants a list ("show me all the bank statements", "what W-9s do we have"). They filter on `file_name`, `category`, `status`, `source`, and `has_text`.
+`quanto_document_query` (client) and `quanto_firm_document_query` (firm) are for *enumerating*, not searching content — use them when the user names a specific file or wants a list ("show me all the bank statements", "what W-9s do we have"). They filter on `file_name`, `category`, `status`, `source`, and `has_text`. For Notion specifically, `notion_page_query` lists the client's pages and takes `kind: "meeting_note"` to list just their meetings ("when did we last meet with them?"); firm-wide meeting notes are `quanto_firm_document_query` with `category: "notion_meeting_note"`.
 
 If `quanto_knowledge_base_search` returns nothing useful:
 
@@ -87,8 +89,10 @@ A row with `status=uploading` / `processing` and null `md_text` is a failed or i
 | 2 · Drill into a hit — full client document | `quanto_document_get` (by `document_id`) | quanto |
 | 2 · Drill into a hit — full firm-wide document | `quanto_firm_document_get` (by `document_id`) | quanto |
 | 2 · Drill into a hit — full Karbon item | `karbon_*_get` (by `external_id`) | karbon |
+| 2 · Drill into a hit — full Notion page / meeting note | `notion_page_get` (by `notion_id`; firm-wide meeting notes via `quanto_firm_document_get`) | notion |
 | Browse / list by name or category | `quanto_document_query`, `quanto_firm_document_query` | quanto |
 | Browse Karbon directly | `karbon_client_profile_query`, `karbon_work_item_query`, `karbon_note_query`, `karbon_note_comment_query` | karbon |
+| Browse Notion directly (`kind: "meeting_note"` for meetings) | `notion_page_query` | notion |
 | Match to a transaction | `qbo_bill_query`, `qbo_purchase_query` | qbo |
 
 ## Strictly read-only

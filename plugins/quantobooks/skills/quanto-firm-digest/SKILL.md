@@ -38,8 +38,11 @@ For each client, `switch_client` and pull a **small, fixed set of fast read-only
 - **Cash health** — `quanto_balance_sheet_report` cash line (and `qbo_report_aged_receivables` only if a client looks tight): is cash low or falling hard?
 - **AR pressure** — large newly-overdue receivables.
 - **Deadlines** — if mapped to Karbon, `karbon_work_item_query` for work items due soon or overdue.
+- **Recent meetings** — if the firm's Notion is connected, `notion_page_query` with `kind: "meeting_note"` and `modified_since` set to the last day or two: a fresh meeting note usually means fresh commitments, so surface it ("met with [client] yesterday — check the note for follow-ups"). Skip silently when the client has no Notion pages.
 
 Keep per-client work minimal and uniform — this is triage, not a per-client review. If a client errors (not authenticated, no data), note it and move on; one bad client never aborts the sweep.
+
+**One firm-level signal before (or after) the sweep:** `quanto_firm_document_query` with `source: "notion"`, `category: "notion_meeting_note"` — firm-wide meeting notes (internal all-hands, pipeline reviews) modified since the last digest. It needs no active client, so it's a single extra call, and anything client-specific said in a firm meeting belongs in that client's digest line.
 
 ### Step 3 — Score and rank
 
@@ -86,6 +89,8 @@ A morning digest is meant to run daily before the workday. After the first run, 
 | Cash health | `quanto_balance_sheet_report` | quanto |
 | AR pressure | `qbo_report_aged_receivables` | qbo |
 | Deadlines (if mapped) | `karbon_work_item_query` | karbon |
+| Fresh client meeting notes (if Notion connected) | `notion_page_query` (`kind: "meeting_note"`, `modified_since`) | notion |
+| Fresh firm-wide meeting notes (no active client needed) | `quanto_firm_document_query` (`source: "notion"`, `category: "notion_meeting_note"`) | quanto |
 | Make it recurring | hand off to `quanto-schedule-workflow` | — |
 
 ## Things to NEVER do

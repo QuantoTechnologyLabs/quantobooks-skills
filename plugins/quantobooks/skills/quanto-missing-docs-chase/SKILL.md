@@ -27,7 +27,7 @@ Use `quanto_general_ledger_report` / `quanto_general_ledger_transaction_analysis
 
 ### Step 3 — Determine what's already supported
 
-For each candidate transaction, check whether backup already exists before chasing it — nothing erodes trust like asking a client for a receipt they already sent. **Search first** with `quanto_knowledge_base_search` (it spans uploaded docs, Google Drive, and Karbon in one call), then confirm with `quanto_document_query`. Treat a transaction as a gap only when no matching document turns up. Remember a document that looks empty/stuck may still be ingested elsewhere — trust the search result.
+For each candidate transaction, check whether backup already exists before chasing it — nothing erodes trust like asking a client for a receipt they already sent. **Search first** with `quanto_knowledge_base_search` (it spans uploaded docs, Google Drive, Karbon, and Notion in one call), then confirm with `quanto_document_query`. Treat a transaction as a gap only when no matching document turns up. Remember a document that looks empty/stuck may still be ingested elsewhere — trust the search result.
 
 ### Step 4 — Classify the gaps
 
