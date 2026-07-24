@@ -1,8 +1,7 @@
 {
   "name": "quantobooks",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "QuantoBooks accounting skills for Claude — month-end close, flag triage, balance sheet review, AR/AP, 1099 prep, and more. Includes the client-pin session guard hooks.",
-  "hooks": "./hooks/hooks.json",
   "author": {
     "name": "Quanto Technology Labs",
     "email": "support@tryquanto.com",
