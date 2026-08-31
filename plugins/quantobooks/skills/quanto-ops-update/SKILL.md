@@ -55,3 +55,4 @@ Enable **auto-update** for the `quantobooks` marketplace (Marketplaces tab) so r
 ## Relationship to other skills
 
 - `quanto-ops-setup` — turns on auto-update during first-time setup; this skill is the manual path and the cache-cascade fix.
+- `quanto-client-context` — the foundation guard every workflow skill follows. It ships inside this plugin, so updating here is how its guardrails stay current; after an update, restart so the latest version loads.
