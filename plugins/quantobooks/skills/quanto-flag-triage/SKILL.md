@@ -13,11 +13,11 @@ This is the highest-frequency QuantoBooks skill. A bookkeeper sits down, says "w
 
 ### Step 1 — Pull the checklist
 
-Call `quanto_action_checklist` for the active client.
+Call `quanto_action_checklist` for the active client (pass `period` when the user names one). Each item carries its `id`, `flag`, `status`, and in `source_data` the lines it covers — account ids, transaction ids, vendor names, or AR/AP aging rows.
 
 Filter / sort:
-- Default to **unresolved** items (drop anything already in `quanto_action_checklist_reviewed`).
-- Drop anything in `quanto_flag_snoozes` (unless the snooze has expired — surface those at the bottom).
+- Default to **unresolved** items: drop `completed` and `dismissed` ones, and any whose lines are all signed off as reviewed (`quanto_action_checklist_reviewed`, filtered by `action_checklist_id`, shows each line's prepared / reviewed marks).
+- Drop lines snoozed in `quanto_flag_snoozes` (unless the snooze has expired — surface those at the bottom); an item whose every line is snoozed is done.
 - Sort by `risk_level`: CRITICAL → HIGH → MEDIUM → LOW.
 - Break ties by `period` (newest first), then by dollar impact.
 
@@ -60,14 +60,21 @@ Three options. Show your proposed action; let the user pick.
 - *Voiding / deleting a bad transaction:* `qbo_<entity>_delete`. **Extra confirmation required** (see foundation guard).
 - *Vendor / customer fix:* `qbo_vendor_update`, `qbo_customer_update`.
 
-Show the JSON payload. Get explicit approval. Call the tool. Confirm the write back.
+Show the JSON payload. Get explicit approval. Call the tool. Confirm the write back. Then sign off the lines you fixed: `quanto_action_checklist_item_mark` with the item's `action_checklist_id`, `stage: "prepared"`, and `line_ids` for those lines (omit `line_ids` when the fix covered every line) — and `stage: "reviewed"` too when the user is the reviewer and says so.
 
-**Snooze.** Use when the flag is valid but blocked or low-priority. Call `quanto_flag_snoozes` with:
-- The flag identifier
-- A snooze duration (default 30 days; ask if longer)
-- A reason (required — Quanto's review team reads these)
+**Snooze.** Use when the flag is valid but blocked or low-priority. Call `quanto_flag_snooze` with:
+- `action_checklist_id` — the item
+- `preset` — how long: `this_month` (the default), `next_2_months` … `next_9_months`, `this_year`, or `forever` (ask before anything past this month)
+- `reason` — always pass one (Quanto's review team reads these)
+- `line_ids` — only when the user is setting aside some of the item's lines; omit for all of them
 
-**Accept.** Use when the flag was a false positive or the underlying state is correct as-is. Call `quanto_action_checklist_reviewed` with the user's note.
+A snoozed line drops out of the item and out of the period's close gate until the snooze ends. `quanto_flag_unsnooze` lifts it.
+
+**Accept.** Use when the flag was a false positive or the underlying state is correct as-is. Two ways, by what the user decided:
+- The lines are fine as they are → sign them off with `quanto_action_checklist_item_mark` (`prepared`, then `reviewed`; a line is marked reviewed only once it is prepared).
+- The whole item doesn't apply → `quanto_action_checklist_item_status_update` with `status: "dismissed"` (or `"completed"` when the work was done outside Quanto) and the user's note as `reason`. An AR/AP aging item still needs its rows reviewed to count as done at close, whatever its status.
+
+Reviewed marks, snoozes and unsnoozes need a firm admin or staff user; the tool says so when the user isn't one. `quanto_action_checklist_item_unmark` undoes a sign-off. These write Quanto's review state, never QuickBooks.
 
 ### Step 5 — Move on
 
@@ -87,6 +94,7 @@ When the queue is empty:
 ## Things that should NEVER happen
 
 - Disposing of a flag without user confirmation. Even an "accept" is a write to Quanto's review state.
+- Writing through `quanto_flag_snoozes` or `quanto_action_checklist_reviewed` — they only read. Snooze with `quanto_flag_snooze`; sign off with `quanto_action_checklist_item_mark` / `quanto_action_checklist_item_status_update`.
 - Batch-deleting transactions without itemizing each one.
 - Calling `qbo_*_delete` when an update would do.
 - Marking a critical flag as reviewed because "it looked fine" — only the user can make that call.

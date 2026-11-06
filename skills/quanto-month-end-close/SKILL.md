@@ -19,9 +19,9 @@ This skill orchestrates the full month-end close for one period. It is the highe
 
 ### Step 1 — Period status
 
-Call `quanto_financial_period` with the target period. This returns Quanto's Month-End Review row for the period: status, scorecard, open flags, last reviewer touch.
+Call `quanto_financial_period` with the target period. This returns Quanto's Month-End Review row for the period: status, scorecard, open flags, last reviewer touch, and its `review_phase` — `unprepared` → `in_preparation` → `prepared` → `reviewed` ("Books closed").
 
-- If the period is already marked closed in Quanto, ask the user whether they want to **re-review** or **close a different period**. Do not silently proceed.
+- If the period is already closed in Quanto (`review_phase` is `reviewed`), ask the user whether they want to **re-review** or **close a different period**. Do not silently proceed.
 - If the period has no Quanto row yet, say so — the data may be too fresh. Offer to pull live QBO reports as a fallback.
 
 ### Step 2 — Action checklist sweep
@@ -33,9 +33,11 @@ Call `quanto_action_checklist` filtered to the target period. Group items by `ri
 4. `LOW`
 
 For each item show: title, account/transaction reference, the reviewer note. Ask the user how they want to handle the criticals before continuing. For each one, the user's options are:
-- **Fix** — invoke the `quanto-flag-triage` skill on that item (it knows how to draft the fix and write it back).
-- **Snooze** — record via `quanto_flag_snoozes` (you'll need a reason).
-- **Accept** — mark reviewed via `quanto_action_checklist_reviewed`.
+- **Fix** — invoke the `quanto-flag-triage` skill on that item (it knows how to draft the fix, write it back and sign the lines off).
+- **Snooze** — `quanto_flag_snooze` with the item's `action_checklist_id`, a `preset` (`this_month` unless the user says longer) and the user's `reason`.
+- **Accept** — sign the item's lines off with `quanto_action_checklist_item_mark` (`prepared`, then `reviewed`), or, when the item doesn't apply, `quanto_action_checklist_item_status_update` with `status: "dismissed"` and the user's reason.
+
+`quanto_action_checklist_reviewed` and `quanto_flag_snoozes` only read the marks and snoozes; they never write. Reviewed marks and snoozes need a firm admin or staff user.
 
 ### Step 3 — Balance sheet review
 
@@ -70,9 +72,11 @@ Produce a written summary with:
 - **Open critical/high flags** (with counts)
 - **Adjusting JEs drafted/posted this session** (list each)
 - **Recommendation**: "ready to close" / "not ready, see [N] open criticals" / "ready with caveats"
-- **Next step suggestion** for the user (e.g., "mark period closed in Quanto", "send to reviewer", "draft client report")
+- **Next step suggestion** for the user (e.g., "close the period in Quanto", "send to reviewer", "draft client report")
 
-Do not call any "mark closed" write tool automatically — that is the user's decision and one click in the dashboard.
+### Step 7 — Close the period (only on the user's explicit yes)
+
+Closing is the user's decision. Never move the period unless they said to in this conversation; a scheduled run never closes. When they do, move it one phase at a time with `quanto_financial_period_phase_update` (`period` + the next `phase`): `in_preparation` once work has started, `prepared` when every line of every item is prepared, then `reviewed` to close the books. The tool applies the same rules as the web checklist, by the firm's review workflow settings — items dismissed (or completed, AR/AP aging aside) need no line sign-offs, snoozed lines and excluded flags don't count — and closing needs a firm admin or staff user. If it refuses, report what is still outstanding; never work around a refusal (no blanket dismissals to get past the gate). Reopening a closed period is the same tool, one phase back.
 
 If the user wants a visual snapshot of the period — flags by risk, scorecard, status — invoke `quanto-report-templates` and fill the **financial period dashboard** template with the period data you already pulled. Renders inline in Cowork; a saved `.html` file in Claude Code.
 
@@ -84,6 +88,9 @@ A close runs every month-end. If this client closes on a predictable cadence (e.
 |------|------|------|
 | Period status | `quanto_financial_period` | quanto |
 | Action items | `quanto_action_checklist`, `quanto_flag_snoozes`, `quanto_action_checklist_reviewed` | quanto |
+| Sign-offs | `quanto_action_checklist_item_mark` / `_unmark`, `quanto_action_checklist_item_status_update` | quanto (write) |
+| Snoozes | `quanto_flag_snooze` / `quanto_flag_unsnooze` | quanto (write) |
+| Close the period | `quanto_financial_period_phase_update` | quanto (write) |
 | BS review | `quanto_balance_sheet_report`, `quanto_balance_sheet_account_analysis` | quanto |
 | P&L review | `quanto_profit_and_loss_report`, `quanto_profit_and_loss_account_analysis` | quanto |
 | TB check | `quanto_trial_balance_report`, `quanto_trial_balance_account_analysis` | quanto |
@@ -95,4 +102,4 @@ You should rarely hit live QBO directly during a close — Quanto's data is exac
 
 ## What "good" looks like
 
-A close session ends with: the user knows every critical flag's disposition, every adjusting JE that was written has a clear narration, the user has a one-paragraph summary they can paste into a client email, and they were never surprised by a write.
+A close session ends with: the user knows every critical flag's disposition, every sign-off and snooze was one they approved, every adjusting JE that was written has a clear narration, the user has a one-paragraph summary they can paste into a client email, and they were never surprised by a write.
